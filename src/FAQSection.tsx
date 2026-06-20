@@ -2,6 +2,7 @@ import { useState, useRef, useEffect } from 'react';
 import { Search, X, Rocket, Wheat, ShoppingCart, Truck, IndianRupee, Star, MessageCircle } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
+import IconContainer from './IconContainer';
 
 interface Message {
   id: string;
@@ -10,15 +11,15 @@ interface Message {
   time: string;
 }
 
-type Category = { id: string; Icon: LucideIcon; label: string; accent: string };
+type Category = { id: string; Icon: LucideIcon; label: string; accent: string; tint: 'green' | 'gold' };
 
 const CATEGORIES: Category[] = [
-  { id: 'launch',   Icon: Rocket,       label: 'Launch',   accent: '#5c9e6e' },
-  { id: 'farmers',  Icon: Wheat,        label: 'Farmers',  accent: '#3d7a54' },
-  { id: 'buyers',   Icon: ShoppingCart, label: 'Buyers',   accent: '#c8862a' },
-  { id: 'delivery', Icon: Truck,        label: 'Delivery', accent: '#2a78c8' },
-  { id: 'pricing',  Icon: IndianRupee,  label: 'Pricing',  accent: '#8a52b8' },
-  { id: 'premium',  Icon: Star,         label: 'Premium',  accent: '#d4a017' },
+  { id: 'launch',   Icon: Rocket,       label: 'Launch',   accent: '#5c9e6e', tint: 'green' },
+  { id: 'farmers',  Icon: Wheat,        label: 'Farmers',  accent: '#3d7a54', tint: 'green' },
+  { id: 'buyers',   Icon: ShoppingCart, label: 'Buyers',   accent: '#c8862a', tint: 'gold' },
+  { id: 'delivery', Icon: Truck,        label: 'Delivery', accent: '#2a78c8', tint: 'green' },
+  { id: 'pricing',  Icon: IndianRupee,  label: 'Pricing',  accent: '#8a52b8', tint: 'gold' },
+  { id: 'premium',  Icon: Star,         label: 'Premium',  accent: '#d4a017', tint: 'gold' },
 ];
 
 const FAQ: Record<string, { q: string; a: string }[]> = {
@@ -64,10 +65,15 @@ export default function FAQSection() {
   const [messages, setMessages] = useState<Message[]>([]);
   const [isTyping, setIsTyping] = useState(false);
   const [askedIds, setAskedIds] = useState<Set<string>>(new Set());
-  const bottomRef = useRef<HTMLDivElement>(null);
+  const chatContainerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
+    if (chatContainerRef.current) {
+      chatContainerRef.current.scrollTo({
+        top: chatContainerRef.current.scrollHeight,
+        behavior: 'smooth'
+      });
+    }
   }, [messages, isTyping]);
 
   const handleCategoryClick = (id: string) => {
@@ -106,7 +112,7 @@ export default function FAQSection() {
   return (
     <section
       data-bg="light"
-      className="relative overflow-hidden px-4 sm:px-6 pt-6 pb-12 lg:py-16 flex items-center min-h-0"
+      className="viewport-section px-4 sm:px-6"
       style={{ background: 'linear-gradient(to bottom, #ffffff 0%, #f3ede3 55%, #e7dfd1 100%)' }}
     >
       {/* Dot texture */}
@@ -118,24 +124,24 @@ export default function FAQSection() {
       <div className="relative max-w-5xl mx-auto w-full">
 
         {/* ── Two-column layout: title+cards LEFT  |  search+chat RIGHT ── */}
-        <div className="flex flex-col lg:flex-row gap-5 lg:gap-8 items-start w-full">
+        <div className="flex flex-col lg:flex-row gap-4 lg:gap-8 items-start w-full">
 
           {/* LEFT: title block + category cards */}
           <div className="lg:w-[40%] flex-shrink-0 flex flex-col w-full">
 
             {/* Compact title */}
-            <div className="mb-5">
-              <p className="text-[#7ab88a] text-[10px] font-bold tracking-[0.22em] uppercase mb-1">Help Center</p>
+            <div className="mb-3 sm:mb-5">
+              <p className="text-[#7ab88a] text-xs font-bold tracking-[0.22em] uppercase mb-0.5">Help Center</p>
               <h2
-                className="text-[1.75rem] sm:text-[2rem] font-bold text-[#1f2a1d] leading-tight mb-1"
+                className="viewport-title font-bold text-[#1f2a1d] leading-tight mb-1"
                 style={{ letterSpacing: '-0.04em' }}
               >
                 Ask Kisan Ka Dukan
               </h2>
-              <p className="text-[#4b5b47]/70 text-sm font-medium">Find answers instantly.</p>
+              <p className="text-[#4b5b47]/70 viewport-subtitle">Find answers instantly.</p>
             </div>
 
-            <div className="grid grid-cols-3 lg:grid-cols-2 gap-2 sm:gap-3">
+            <div className="grid grid-cols-3 lg:grid-cols-2 gap-1.5 sm:gap-2.5">
               {CATEGORIES.map((cat, i) => {
                 const isActive = activeCategory === cat.id;
                 return (
@@ -147,7 +153,7 @@ export default function FAQSection() {
                     transition={{ duration: 0.35, delay: i * 0.05 }}
                     whileHover={!isActive ? { y: -2, transition: { duration: 0.18 } } : {}}
                     onClick={() => handleCategoryClick(cat.id)}
-                    className={`relative group flex flex-col items-center justify-center p-3 sm:p-4 min-h-[88px] rounded-[16px] border transition-all duration-300 overflow-hidden cursor-pointer ${
+                    className={`relative group flex flex-col items-center justify-center p-2 sm:p-3 min-h-[72px] sm:min-h-[84px] rounded-2xl border transition-all duration-300 overflow-hidden cursor-pointer ${
                       isActive
                         ? 'bg-[#1f2a1d] border-[#1f2a1d] shadow-lg shadow-[#1f2a1d]/20 ring-1 ring-[#1f2a1d]/20'
                         : 'bg-white/90 border-[#1f2a1d]/10 hover:bg-white hover:border-[#1f2a1d]/20 hover:shadow-sm'
@@ -160,13 +166,16 @@ export default function FAQSection() {
                       />
                     )}
                     <div className="relative z-10 flex flex-col items-center text-center">
-                      <div className={`mb-1.5 transition-colors ${isActive ? 'text-white' : 'text-[#4b5b47]'}`}>
-                        <cat.Icon className="w-[20px] h-[20px] sm:w-[22px] sm:h-[22px]" strokeWidth={1.8} />
-                      </div>
-                      <p className={`text-[12px] sm:text-[13px] font-semibold leading-tight mb-0.5 transition-colors ${isActive ? 'text-white' : 'text-[#1f2a1d]'}`}>
+                       <IconContainer
+                         icon={cat.Icon}
+                         tint={cat.tint}
+                         isDark={isActive}
+                         className="mb-1 sm:mb-2 scale-75 sm:scale-95"
+                       />
+                      <p className={`text-sm font-semibold leading-tight mb-0.5 transition-colors ${isActive ? 'text-white' : 'text-[#1f2a1d]'}`}>
                         {cat.label}
                       </p>
-                      <p className={`text-[9px] sm:text-[10px] leading-none transition-colors ${isActive ? 'text-white/50' : 'text-[#4b5b47]/50'}`}>
+                      <p className={`text-xs leading-none transition-colors ${isActive ? 'text-white/50' : 'text-[#4b5b47]/50'}`}>
                         {FAQ[cat.id].length} Qs
                       </p>
                     </div>
@@ -176,16 +185,16 @@ export default function FAQSection() {
             </div>
           </div>
 
-          <div className="flex-1 w-full min-w-0 flex flex-col gap-4">
+          <div className="flex-1 w-full min-w-0 flex flex-col gap-3 sm:gap-4">
 
             <div className="relative w-full">
-              <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-[#1f2a1d]/50" strokeWidth={2} />
+              <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 sm:w-5 sm:h-5 text-[#1f2a1d]/50" strokeWidth={1.95} />
               <input
                 type="text"
                 placeholder="Search questions..."
                 value={search}
                 onChange={e => setSearch(e.target.value)}
-                className="w-full bg-white border-2 border-[#1f2a1d]/10 rounded-2xl pl-12 pr-10 py-3.5 text-[#1f2a1d] placeholder-[#1f2a1d]/40 text-base font-medium focus:outline-none focus:border-[#7ab88a]/80 shadow-sm transition-all duration-200"
+                className="w-full bg-white border-2 border-[#1f2a1d]/10 rounded-2xl pl-10 sm:pl-12 pr-10 py-2.5 sm:py-3 text-[#1f2a1d] placeholder-[#1f2a1d]/40 text-sm sm:text-base font-medium focus:outline-none focus:border-[#7ab88a]/80 shadow-sm transition-all duration-200"
               />
               <AnimatePresence>
                 {search && (
@@ -196,7 +205,7 @@ export default function FAQSection() {
                     onClick={() => setSearch('')}
                     className="absolute right-4 top-1/2 -translate-y-1/2 text-[#1f2a1d]/40 hover:text-[#1f2a1d] p-1 transition-colors"
                   >
-                    <X className="w-5 h-5" />
+                    <X className="w-4 h-4 sm:w-5 sm:h-5" strokeWidth={1.95} />
                   </motion.button>
                 )}
               </AnimatePresence>
@@ -223,7 +232,7 @@ export default function FAQSection() {
                           }}
                           className="w-full flex items-start gap-3 px-4 py-3 hover:bg-[#f7f4ef] transition-colors text-left border-b border-[#1f2a1d]/05 last:border-0"
                         >
-                          {cat && <cat.Icon className="w-4 h-4 flex-shrink-0 mt-0.5 text-[#4b5b47]/55" strokeWidth={1.5} />}
+                           {cat && <cat.Icon className="w-4 h-4 flex-shrink-0 mt-0.5 text-[#4b5b47]/55" strokeWidth={1.95} />}
                           <div>
                             <p className="text-[#1f2a1d] text-sm font-medium leading-snug">{item.q}</p>
                             <p className="text-[#4b5b47]/50 text-xs mt-0.5 line-clamp-1">{item.a}</p>
@@ -248,13 +257,16 @@ export default function FAQSection() {
                   animate={{ opacity: 1 }}
                   exit={{ opacity: 0 }}
                   className="flex flex-col items-center justify-center bg-white/60 rounded-[24px] border border-[#1f2a1d]/10 shadow-sm w-full"
-                  style={{ minHeight: 280 }}
+                  style={{ minHeight: 'clamp(180px, 30vh, 260px)' }}
                 >
-                  <div className="w-14 h-14 rounded-full bg-[#f0f7f2] border border-[#7ab88a]/20 flex items-center justify-center mb-4">
-                    <MessageCircle className="w-6 h-6 text-[#7ab88a]" strokeWidth={1.4} />
-                  </div>
-                  <p className="text-[#1f2a1d] font-bold text-lg mb-1.5">Pick a topic</p>
-                  <p className="text-[#4b5b47]/60 text-sm font-medium text-center max-w-[220px] leading-relaxed">
+                   <IconContainer
+                     icon={MessageCircle}
+                     tint="green"
+                     isDark={false}
+                     className="mb-3 sm:mb-4 scale-90 sm:scale-100"
+                   />
+                  <p className="text-[#1f2a1d] font-bold text-base sm:text-lg mb-1">Pick a topic</p>
+                  <p className="text-[#4b5b47]/60 text-xs sm:text-sm font-medium text-center max-w-[200px] leading-relaxed">
                     Select a category to start a conversation with our support team.
                   </p>
                 </motion.div>
@@ -267,13 +279,18 @@ export default function FAQSection() {
                   transition={{ duration: 0.22 }}
                   className="flex flex-col bg-white rounded-[24px] border border-[#1f2a1d]/10 shadow-md overflow-hidden w-full"
                 >
-                  <div className="flex items-center gap-3 px-5 py-4 bg-[#141f14] border-b border-white/5">
-                    <div className="w-10 h-10 rounded-full bg-[#7ab88a]/20 border border-[#7ab88a]/30 flex items-center justify-center flex-shrink-0 shadow-inner">
-                      {activeCat && <activeCat.Icon className="w-5 h-5 text-[#7ab88a]" strokeWidth={1.8} />}
-                    </div>
+                  <div className="flex items-center gap-3 px-4 sm:px-5 py-3 sm:py-4 bg-[#141f14] border-b border-white/5">
+                     {activeCat && (
+                       <IconContainer
+                         icon={activeCat.Icon}
+                         tint={activeCat.tint}
+                         isDark={true}
+                         className="scale-75 sm:scale-100"
+                       />
+                     )}
                     <div className="min-w-0">
-                      <p className="text-white text-sm font-semibold leading-none mb-1">Kisan Ka Dukan Support</p>
-                      <p className="text-[#7ab88a]/90 text-[11px] font-medium truncate">{activeCat?.label} — tap a question below</p>
+                      <p className="text-white text-sm sm:text-base font-semibold leading-none mb-1">Kisan Ka Dukan Support</p>
+                      <p className="text-[#7ab88a]/90 text-xs sm:text-sm font-medium truncate">{activeCat?.label} — tap a question below</p>
                     </div>
                     <div className="ml-auto flex items-center gap-1.5 flex-shrink-0">
                       <motion.span
@@ -281,17 +298,18 @@ export default function FAQSection() {
                         animate={{ opacity: [1, 0.4, 1] }}
                         transition={{ duration: 2, repeat: Infinity }}
                       />
-                      <span className="text-[#7ab88a] text-[11px] font-bold uppercase tracking-widest">Online</span>
+                      <span className="text-[#7ab88a] text-xs font-bold uppercase tracking-widest">Online</span>
                     </div>
                   </div>
 
                   <div
-                    className="overflow-y-auto px-5 py-5 flex flex-col gap-3"
-                    style={{ minHeight: (messages.length === 0 && !isTyping) ? 100 : 200, maxHeight: 320, background: '#faf8f4' }}
+                    ref={chatContainerRef}
+                    className="overflow-y-auto px-4 sm:px-5 py-4 flex flex-col gap-2.5 sm:gap-3"
+                    style={{ minHeight: (messages.length === 0 && !isTyping) ? 80 : 'clamp(120px, 20vh, 180px)', maxHeight: 'clamp(150px, 35vh, 260px)', background: '#faf8f4' }}
                   >
                     {messages.length === 0 && !isTyping && (
-                      <div className="flex items-center justify-center h-full py-6">
-                        <p className="text-[#4b5b47]/30 text-xs text-center">Tap a question below to get an answer</p>
+                      <div className="flex items-center justify-center h-full py-4">
+                        <p className="text-[#4b5b47]/50 text-xs sm:text-sm text-center">Tap a question below to get an answer</p>
                       </div>
                     )}
                     {messages.map(msg => (
@@ -304,7 +322,7 @@ export default function FAQSection() {
                       >
                         <div className={`flex flex-col gap-0.5 max-w-[80%] ${msg.role === 'user' ? 'items-end' : 'items-start'}`}>
                           <div
-                            className={`px-3.5 py-2.5 text-[13px] leading-relaxed ${
+                            className={`px-3 py-2 text-sm leading-relaxed ${
                               msg.role === 'user'
                                 ? 'bg-[#1f2a1d] text-white rounded-2xl rounded-br-sm'
                                 : 'bg-white text-[#1f2a1d] rounded-2xl rounded-bl-sm shadow-sm border border-[#1f2a1d]/06'
@@ -312,7 +330,7 @@ export default function FAQSection() {
                           >
                             {msg.text}
                           </div>
-                          <span className="text-[10px] text-[#4b5b47]/30 px-1">{msg.time}</span>
+                          <span className="text-xs text-[#4b5b47]/50 px-1">{msg.time}</span>
                         </div>
                       </motion.div>
                     ))}
@@ -324,11 +342,11 @@ export default function FAQSection() {
                           exit={{ opacity: 0 }}
                           className="flex justify-start"
                         >
-                          <div className="bg-white rounded-2xl rounded-bl-sm px-3.5 py-2.5 flex items-center gap-1.5 shadow-sm border border-[#1f2a1d]/06">
+                          <div className="bg-white rounded-2xl rounded-bl-sm px-3 py-2 flex items-center gap-1.5 shadow-sm border border-[#1f2a1d]/06">
                             {[0, 1, 2].map(i => (
                               <motion.span
                                 key={i}
-                                className="w-1.5 h-1.5 rounded-full bg-[#4b5b47]/35 block"
+                                className="w-1 h-1 sm:w-1.5 sm:h-1.5 rounded-full bg-[#4b5b47]/35 block"
                                 animate={{ y: [0, -4, 0] }}
                                 transition={{ duration: 0.5, repeat: Infinity, delay: i * 0.13 }}
                               />
@@ -337,15 +355,14 @@ export default function FAQSection() {
                         </motion.div>
                       )}
                     </AnimatePresence>
-                    <div ref={bottomRef} />
                   </div>
 
                   {/* Question chips */}
-                  <div className="px-5 pb-5 pt-6 border-t border-[#1f2a1d]/05 bg-white">
-                    <p className="text-[#1f2a1d]/40 text-[10px] uppercase tracking-[0.2em] mb-3 font-bold">
+                  <div className="px-4 sm:px-5 pb-4 sm:pb-5 pt-3 sm:pt-5 border-t border-[#1f2a1d]/05 bg-white">
+                    <p className="text-[#1f2a1d]/50 text-xs uppercase tracking-[0.2em] mb-2 sm:mb-3 font-bold">
                       Suggested Questions
                     </p>
-                    <div className="flex flex-col gap-2">
+                    <div className="flex flex-col gap-1.5 sm:gap-2">
                       {activeQuestions.map((item, i) => {
                         const qId = `${activeCategory}-${i}`;
                         const asked = askedIds.has(qId);
@@ -357,7 +374,7 @@ export default function FAQSection() {
                             transition={{ duration: 0.2, delay: i * 0.04 }}
                             onClick={() => handleQuestion(item.q, item.a, qId)}
                             disabled={asked}
-                            className={`text-left text-[14px] px-4 py-3.5 min-h-[44px] rounded-[14px] border transition-all duration-200 shadow-sm ${
+                            className={`text-left text-sm sm:text-base px-3 sm:px-4 py-2 sm:py-2.5 min-h-[36px] sm:min-h-[42px] rounded-xl border transition-all duration-200 shadow-sm ${
                               asked
                                 ? 'border-transparent bg-transparent text-[#1f2a1d]/40 cursor-default line-through decoration-[#1f2a1d]/20 shadow-none'
                                 : 'border-[#1f2a1d]/10 bg-[#fbfaf8] text-[#1f2a1d] font-medium hover:bg-[#f0f7f2] hover:border-[#7ab88a]/40 active:scale-[0.99]'

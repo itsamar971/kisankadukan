@@ -2,9 +2,149 @@
 @tailwind components;
 @tailwind utilities;
 
+:root {
+  /* Section Padding Scale */
+  --space-section-desktop: 96px;
+  --space-section-tablet: 72px;
+  --space-section-mobile: 56px;
+
+  /* Spacing Scale Token */
+  --space-section: var(--space-section-mobile);
+
+  /* Card Grid Tokens */
+  --card-radius: 24px;
+  --card-padding: 12px;
+  --card-gap: 12px;
+}
+
+@media (min-width: 768px) {
+  :root {
+    --space-section: var(--space-section-tablet);
+    --card-padding: 20px;
+    --card-gap: 16px;
+  }
+}
+
+@media (min-width: 1024px) {
+  :root {
+    --space-section: var(--space-section-desktop);
+    --card-padding: 28px;
+    --card-gap: 20px;
+  }
+}
+
 html, body, #root {
   height: 100%;
   margin: 0;
   font-family: 'Neue Haas Grotesk Display Pro 55 Roman', 'Neue Haas Grotesk Text Pro', 'Helvetica Neue', Helvetica, Arial, sans-serif;
   -webkit-font-smoothing: antialiased;
 }
+
+html {
+  scroll-snap-type: y proximity;
+  scroll-behavior: smooth;
+}
+
+/* Custom global rules for viewport height fitting */
+.viewport-section {
+  min-height: 100svh;
+  display: flex;
+  flex-direction: column;
+  padding-top: var(--space-section);
+  padding-bottom: var(--space-section);
+  box-sizing: border-box;
+  position: relative;
+  overflow: hidden;
+  scroll-snap-align: start;
+  scroll-snap-stop: always;
+}
+
+@media (min-width: 768px) {
+  .viewport-section {
+    min-height: 100vh;
+  }
+}
+
+/* Standardized Card Classes */
+.standard-card {
+  border-radius: var(--card-radius) !important;
+  padding: var(--card-padding) !important;
+}
+
+.standard-grid {
+  gap: var(--card-gap) !important;
+}
+
+/* Responsive typography scaling for viewport height */
+.viewport-title {
+  font-size: clamp(2rem, 5vw, 3.5rem);
+  line-height: 1.1;
+  letter-spacing: -0.03em;
+}
+
+.viewport-subtitle {
+  font-size: clamp(0.9375rem, 2vw, 1.125rem);
+  line-height: 1.5;
+}
+
+.viewport-text {
+  font-size: clamp(0.9375rem, 1.5vw, 1rem);
+  line-height: 1.5;
+}
+
+/* Animation for the pulsing effect */
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}
+
+/* Animation for the ping effect */
+@keyframes ping {
+  75%, 100% { transform: scale(2); opacity: 0; }
+}
+
+/* Custom animations for the orbital timeline */
+.animate-pulse { animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite; }
+.animate-ping { animation: ping 1s cubic-bezier(0, 0, 0.2, 1) infinite; }
+
+/* Transitions */
+.transition-all {
+  transition-property: all;
+  transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+}
+.duration-300 { transition-duration: 300ms; }
+.duration-700 { transition-duration: 700ms; }
+.duration-1000 { transition-duration: 1000ms; }
+
+/* Backdrop blur */
+.backdrop-blur-lg { backdrop-filter: blur(16px); }
+
+/* Z-index utilities */
+.z-10 { z-index: 10; }
+.z-50 { z-index: 50; }
+
+/* Custom shadows */
+.shadow-orbital { box-shadow: 0 0 15px rgba(255, 255, 255, 0.1); }
+
+/* Custom transforms */
+.scale-125 { transform: scale(1.25); }
+.scale-150 { transform: scale(1.5); }
+
+/* Custom opacity values */
+.opacity-70 { opacity: 0.7; }
+.opacity-50 { opacity: 0.5; }
+
+/* Custom border opacity */
+.border-white\/10 { border-color: rgba(255, 255, 255, 0.1); }
+.border-white\/20 { border-color: rgba(255, 255, 255, 0.2); }
+.border-white\/30 { border-color: rgba(255, 255, 255, 0.3); }
+.border-white\/40 { border-color: rgba(255, 255, 255, 0.4); }
+
+/* Custom background opacity */
+.bg-black\/90 { background-color: rgba(0, 0, 0, 0.9); }
+.bg-white\/50 { background-color: rgba(255, 255, 255, 0.5); }
+.bg-white\/80 { background-color: rgba(255, 255, 255, 0.8); }
+
+/* Custom text opacity */
+.text-white\/70 { color: rgba(255, 255, 255, 0.7); }
+.text-white\/80 { color: rgba(255, 255, 255, 0.8); }
