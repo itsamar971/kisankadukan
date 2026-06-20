@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { useOutletContext, Link } from 'react-router-dom';
-import { Play, Sparkles, X, Check, User, List, Clock, ShieldCheck, Star, BookOpen, Smartphone, Shield, Wheat, ShoppingCart, Sprout, Package, UploadCloud, Search, Handshake, CheckCircle2, Truck } from 'lucide-react';
+import { Play, Sparkles, X, Check, Wheat, ShoppingCart, Sprout, Package, UploadCloud, Search, Handshake, CheckCircle2, Truck } from 'lucide-react';
 import { motion } from 'framer-motion';
 import BoomerangVideoBg from '../BoomerangVideoBg';
 import RadialTimelineDemo from '../components/RadialTimelineDemo';
