@@ -557,23 +557,13 @@ export default function HomePage() {
 
     {/* A Better Way Forward */}
     <section data-bg="light" className="viewport-section px-4 sm:px-6">
-      <div className="absolute inset-0">
-        <Grainient
-          color1="#dff0df"
-          color2="#7ab88a"
-          color3="#2a5a3a"
-          timeSpeed={0.16}
-          warpStrength={1.0}
-          warpFrequency={4.0}
-          warpAmplitude={80.0}
-          grainAmount={0.055}
-          grainScale={1.9}
-          contrast={1.4}
-          saturation={1.0}
-          rotationAmount={320.0}
-          zoom={0.93}
-        />
-      </div>
+      <div 
+        className="absolute inset-0 bg-[linear-gradient(165deg,_#FFD584_28%,_#A8C4E0_92%)]" 
+        style={{ background: 'linear-gradient(165deg, #FFD584 28%, #A8C4E0 92%)' }}
+      />
+      {/* Decorative ambient blobs for premium feel */}
+      <div className="absolute top-0 right-1/4 w-[350px] h-[350px] bg-[#FFD584]/35 rounded-full blur-[100px] pointer-events-none mix-blend-multiply animate-pulse" style={{ animationDuration: '8s' }} />
+      <div className="absolute bottom-0 left-1/4 w-[450px] h-[450px] bg-[#A8C4E0]/45 rounded-full blur-[120px] pointer-events-none mix-blend-multiply animate-pulse" style={{ animationDuration: '12s' }} />
       <div className="relative z-10 max-w-5xl mx-auto w-full my-auto py-8">
 
         <h2
@@ -665,23 +655,13 @@ export default function HomePage() {
 
     {/* Built for Trust and Efficiency */}
     <section data-bg="light" className="viewport-section px-4 sm:px-6">
-      <div className="absolute inset-0">
-        <Grainient
-          color1="#f8e090"
-          color2="#dfa855"
-          color3="#9c7030"
-          timeSpeed={0.14}
-          warpStrength={1.2}
-          warpFrequency={4.2}
-          warpAmplitude={72.0}
-          grainAmount={0.06}
-          grainScale={1.8}
-          contrast={1.5}
-          saturation={1.2}
-          rotationAmount={310.0}
-          zoom={0.94}
-        />
-      </div>
+      <div 
+        className="absolute inset-0 bg-[linear-gradient(194deg,_#658FB6_3%,_#FFE252_81%)]" 
+        style={{ background: 'linear-gradient(194deg, #658FB6 3%, #FFE252 81%)' }}
+      />
+      {/* Decorative ambient blobs for premium feel */}
+      <div className="absolute top-0 left-1/4 w-[350px] h-[350px] bg-[#658FB6]/30 rounded-full blur-[100px] pointer-events-none mix-blend-multiply animate-pulse" style={{ animationDuration: '9s' }} />
+      <div className="absolute bottom-0 right-1/4 w-[450px] h-[450px] bg-[#FFE252]/35 rounded-full blur-[120px] pointer-events-none mix-blend-multiply animate-pulse" style={{ animationDuration: '13s' }} />
       <div className="relative z-10 max-w-5xl mx-auto w-full">
 
         <RadialTimelineDemo />
