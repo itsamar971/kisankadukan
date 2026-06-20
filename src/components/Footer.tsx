@@ -62,17 +62,17 @@ export default function Footer() {
 
             {/* Contact info */}
             <div className="flex flex-col gap-4">
-              <a href="mailto:hello@kisankadukan.com" className="flex items-center gap-3 text-white/40 hover:text-[#dfb15b] transition-all duration-300 text-sm group">
+              <a href="mailto:kisankadhukan2026@gmail.com" className="flex items-center gap-3 text-white/40 hover:text-[#dfb15b] transition-all duration-300 text-sm group">
                 <Mail className="w-4 h-4 text-white/40 group-hover:text-[#dfb15b] transition-colors" strokeWidth={1.95} />
-                hello@kisankadukan.com
+                kisankadhukan2026@gmail.com
               </a>
-              <a href="tel:+911234567890" className="flex items-center gap-3 text-white/40 hover:text-[#dfb15b] transition-all duration-300 text-sm group">
+              <a href="tel:+919866531592" className="flex items-center gap-3 text-white/40 hover:text-[#dfb15b] transition-all duration-300 text-sm group">
                 <Phone className="w-4 h-4 text-white/40 group-hover:text-[#dfb15b] transition-colors" strokeWidth={1.95} />
-                +91 123 456 7890
+                +91 98665 31592
               </a>
               <div className="flex items-center gap-3 text-white/40 text-sm group">
                 <MapPin className="w-4 h-4 text-white/40" strokeWidth={1.95} />
-                Bharat, India
+                16-22 Gajwel, Telangana
               </div>
             </div>
           </div>

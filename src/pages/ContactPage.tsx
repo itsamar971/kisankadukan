@@ -51,8 +51,7 @@ export default function ContactPage() {
                     </div>
                     <div>
                       <p className="font-bold text-[#1f2a1d]">Email Us</p>
-                      {/* TODO: replace with real email if different */}
-                      <a href="mailto:hello@kisankadukan.com" className="text-[#4b5b47] hover:text-[#7ab88a] transition-colors">hello@kisankadukan.com</a>
+                      <a href="mailto:kisankadhukan2026@gmail.com" className="text-[#4b5b47] hover:text-[#7ab88a] transition-colors">kisankadhukan2026@gmail.com</a>
                     </div>
                   </div>
                   
@@ -62,8 +61,7 @@ export default function ContactPage() {
                     </div>
                     <div>
                       <p className="font-bold text-[#1f2a1d]">Call Us</p>
-                      {/* TODO: replace with real phone number */}
-                      <a href="tel:+911234567890" className="text-[#4b5b47] hover:text-[#7ab88a] transition-colors">+91 123 456 7890</a>
+                      <a href="tel:+919866531592" className="text-[#4b5b47] hover:text-[#7ab88a] transition-colors">+91 98665 31592</a>
                     </div>
                   </div>
 
@@ -73,8 +71,7 @@ export default function ContactPage() {
                     </div>
                     <div>
                       <p className="font-bold text-[#1f2a1d]">Office</p>
-                      {/* TODO: replace with real office address */}
-                      <p className="text-[#4b5b47]">123 Agri-Tech Park<br />New Delhi, DL 110001<br />Bharat, India</p>
+                      <p className="text-[#4b5b47]">16-22 Gajwel<br />Telangana, India</p>
                     </div>
                   </div>
                 </div>
