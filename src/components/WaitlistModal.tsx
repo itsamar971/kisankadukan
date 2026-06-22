@@ -10,6 +10,15 @@ interface WaitlistModalProps {
 export default function WaitlistModal({ isOpen, onClose }: WaitlistModalProps) {
   const [selectedRole, setSelectedRole] = useState<'farmer' | 'buyer' | null>(null);
 
+  const handleContinue = () => {
+    if (selectedRole === 'farmer') {
+      window.open('https://docs.google.com/forms/d/e/1FAIpQLSf-ShtguJNPsTChicd6KYPiTauLpkWXqaLgnY-IcNPBifzzkg/viewform?usp=publish-editor', '_blank', 'noopener,noreferrer');
+    } else if (selectedRole === 'buyer') {
+      window.open('https://docs.google.com/forms/d/e/1FAIpQLSc5UvDgummera1QcQQUfKoj-D4Nw-3vyu7zRQsXo7mhi4sOfw/viewform?usp=publish-editor', '_blank', 'noopener,noreferrer');
+    }
+    onClose();
+  };
+
   // Close on escape key
   useEffect(() => {
     const handleEsc = (e: KeyboardEvent) => {
@@ -108,6 +117,7 @@ export default function WaitlistModal({ isOpen, onClose }: WaitlistModalProps) {
               {/* Action */}
               <button
                 disabled={!selectedRole}
+                onClick={handleContinue}
                 className={`w-full flex items-center justify-center gap-2 py-3.5 rounded-full font-bold transition-all duration-300 ${
                   selectedRole 
                     ? 'bg-[#1f2a1d] hover:bg-[#2a3827] text-white shadow-md' 
