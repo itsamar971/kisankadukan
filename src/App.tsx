@@ -8,7 +8,7 @@ import MissionPage from './pages/MissionPage';
 import HelpCenterPage from './pages/HelpCenterPage';
 import ContactPage from './pages/ContactPage';
 import ComingSoonPage from './pages/ComingSoonPage';
-
+import LiveDemoPage from './pages/LiveDemoPage';
 export default function App() {
   return (
     <BrowserRouter>
@@ -22,6 +22,7 @@ export default function App() {
           <Route path="help" element={<HelpCenterPage />} />
           <Route path="contact" element={<ContactPage />} />
           <Route path="how-we-build" element={<ComingSoonPage title="How we build?" message="Yet to be out soon, we just started!" />} />
+          <Route path="demo" element={<LiveDemoPage />} />
           
           {/* Coming Soon Pages */}
           <Route path="pricing" element={<ComingSoonPage title="Pricing" />} />

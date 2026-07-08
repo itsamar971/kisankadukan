@@ -425,9 +425,9 @@ export default function HomePage() {
           A marketplace built for you — where every purchase costs nothing but your health and happy living.
         </p>
         <div className="flex items-center gap-4 flex-wrap">
-          <button className="bg-[#3d5638] sm:bg-white hover:bg-[#2d4228] sm:hover:bg-white/90 text-white sm:text-[#1f2a1d] text-sm font-semibold px-5 sm:px-6 py-2.5 sm:py-3 rounded-full transition-colors shadow-sm">
+          <Link to="/demo" className="bg-[#3d5638] sm:bg-white hover:bg-[#2d4228] sm:hover:bg-white/90 text-white sm:text-[#1f2a1d] text-sm font-semibold px-5 sm:px-6 py-2.5 sm:py-3 rounded-full transition-colors shadow-sm inline-flex items-center justify-center">
             Try it Live
-          </button>
+          </Link>
         </div>
       </div>
 

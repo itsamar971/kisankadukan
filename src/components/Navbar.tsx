@@ -73,7 +73,7 @@ export default function Navbar({ navOnLight, hideNav, onOpenWaitlist }: NavbarPr
             Register
           </a>
           <button onClick={onOpenWaitlist} className="lg:hidden bg-white/70 backdrop-blur-md border border-white/60 hover:bg-white/90 text-[#1f2a1d] text-sm font-medium px-4 py-2 rounded-full transition-colors">
-            Join Waitlist
+            Register
           </button>
           <button
             onClick={() => setMenuOpen((v) => !v)}
