@@ -8,7 +8,7 @@ import {
   Wheat, Truck, CheckCircle2, Clock, BarChart3, Sprout,
   IndianRupee, Search, Filter, Download, Edit2, Trash2, Eye,
   User, Save, AlertCircle, Tractor, FileText, Calendar, Package2,
-  MessageSquare, Sparkles, ArrowRight, Apple
+  MessageSquare, Sparkles, ArrowRight, Apple, Target, Zap, Shield
 } from 'lucide-react';
 
 /* ═══════════════════════════ MOCK DATA ═══════════════════════════ */
@@ -1149,9 +1149,8 @@ function CircularProgress({ pct }: { pct: number }) {
   );
 }
 
-function BuyerDashboardView() {
+function BuyerDashboardView({ onCheckout }: { onCheckout?: (item?: any) => void }) {
   const [btnStates, setBtnStates] = useState<Record<string, string>>({});
-  const [showOrderModal, setShowOrderModal] = useState(false);
   const [showListingModal, setShowListingModal] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -1207,21 +1206,16 @@ function BuyerDashboardView() {
     <div className="dsh-content">
 
       {/* ── Header ── */}
-      <div className="dsh-page-header">
-        <div>
-          <p className="dsh-page-eyebrow">Agri marketplace status at a glance</p>
-          <h1 className="dsh-page-title">Dashboard</h1>
-        </div>
-        <div style={{ display:'flex', gap:10 }}>
-          <button className="dsh-cta-btn" onClick={() => setShowOrderModal(true)}>
-            {btnStates['order'] === 'loading' ? 'Processing...' : btnStates['order'] || <><Plus size={15}/> Place Order</>}
-          </button>
-          <input type="file" ref={fileInputRef} onChange={handleFileChange} style={{ display: 'none' }} accept=".csv, .xlsx, .json" />
-          <button className="dsh-ghost-btn dsh-ghost-btn--border" style={{ background:'#fff' }} onClick={() => fileInputRef.current?.click()}>
-            {btnStates['import'] === 'loading' ? 'Importing...' : btnStates['import'] || <><Download size={14}/> Import Data</>}
-          </button>
-        </div>
+      <div style={{ display:'flex', justifyContent:'center', padding:'16px 0 8px', gap:12 }}>
+        <button className="dsh-cta-btn" style={{ flex:1, maxWidth:160, justifyContent:'center' }} onClick={() => onCheckout && onCheckout()}>
+          <Plus size={15}/> Place Order
+        </button>
+        <input type="file" ref={fileInputRef} onChange={handleFileChange} style={{ display: 'none' }} accept=".csv, .xlsx, .json" />
+        <button className="dsh-ghost-btn dsh-ghost-btn--border" style={{ flex:1, maxWidth:160, background:'#fff', justifyContent:'center' }} onClick={() => fileInputRef.current?.click()}>
+          {btnStates['import'] === 'loading' ? 'Importing...' : btnStates['import'] || <><Download size={14}/> Import Data</>}
+        </button>
       </div>
+
 
       {/* ── Stats row ── */}
       <div className="dsh-donz-stats">
@@ -1378,39 +1372,6 @@ function BuyerDashboardView() {
         </div>
       </div>
 
-      {showOrderModal && (
-        <div className="dsh-modal-overlay" onClick={() => setShowOrderModal(false)} style={{ position:'fixed', top:0, left:0, right:0, bottom:0, background:'rgba(0,0,0,0.5)', zIndex:999, display:'flex', alignItems:'center', justifyContent:'center', padding:20 }}>
-          <div className="dsh-modal" onClick={e => e.stopPropagation()} style={{ background:'#fff', borderRadius:16, width:'100%', maxWidth:400, padding:24, boxShadow:'0 10px 25px rgba(0,0,0,0.1)' }}>
-            <h3 style={{ margin:'0 0 16px 0', fontSize:18, color:'#111827' }}>Place New Order</h3>
-            <div style={{ display:'flex', flexDirection:'column', gap:12 }}>
-              <div>
-                <label style={{ fontSize:12, fontWeight:600, color:'#4b5563', marginBottom:4, display:'block' }}>Select Crop</label>
-                <select className="dsh-form-input">
-                  <option>Fresh Tomatoes</option>
-                  <option>Alphonso Mangoes</option>
-                  <option>Organic Basmati</option>
-                </select>
-              </div>
-              <div>
-                <label style={{ fontSize:12, fontWeight:600, color:'#4b5563', marginBottom:4, display:'block' }}>Quantity (kg)</label>
-                <input type="number" className="dsh-form-input" placeholder="e.g. 50" />
-              </div>
-              <div>
-                <label style={{ fontSize:12, fontWeight:600, color:'#4b5563', marginBottom:4, display:'block' }}>Delivery Address</label>
-                <input type="text" className="dsh-form-input" placeholder="Enter delivery location" />
-              </div>
-            </div>
-            <div style={{ display:'flex', gap:10, marginTop:24 }}>
-              <button className="dsh-ghost-btn" style={{ flex:1 }} onClick={() => setShowOrderModal(false)}>Cancel</button>
-              <button className="dsh-cta-btn" style={{ flex:1 }} onClick={() => {
-                handleAction('order', 'Order Placed!');
-                setShowOrderModal(false);
-              }}>Confirm Order</button>
-            </div>
-          </div>
-        </div>
-      )}
-
       {showListingModal && (
         <div className="dsh-modal-overlay" onClick={() => setShowListingModal(false)} style={{ position:'fixed', top:0, left:0, right:0, bottom:0, background:'rgba(0,0,0,0.5)', zIndex:999, display:'flex', alignItems:'center', justifyContent:'center', padding:20 }}>
           <div className="dsh-modal" onClick={e => e.stopPropagation()} style={{ background:'#fff', borderRadius:16, width:'100%', maxWidth:400, padding:24, boxShadow:'0 10px 25px rgba(0,0,0,0.1)' }}>
@@ -1438,7 +1399,7 @@ function BuyerDashboardView() {
               <button className="dsh-ghost-btn" style={{ flex:1 }} onClick={() => setShowListingModal(false)}>Close</button>
               <button className="dsh-cta-btn" style={{ flex:1 }} onClick={() => {
                 setShowListingModal(false);
-                setShowOrderModal(true);
+                if (onCheckout) onCheckout({ name: 'Tomatoes', farmer: 'Ramesh Patel', price: '₹40/kg' });
               }}>Order Now</button>
             </div>
           </div>
@@ -1449,16 +1410,52 @@ function BuyerDashboardView() {
   );
 }
 
+function RadarScannerModal({ onClose }: { onClose: () => void }) {
+  return (
+    <div className="dsh-modal-overlay" onClick={onClose} style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, zIndex: 9999, background: 'rgba(0, 0, 0, 0.4)', display: 'flex', alignItems: 'center', justifyContent: 'center', backdropFilter: 'blur(4px)' }}>
+      <div onClick={e => e.stopPropagation()} style={{ background: '#f8faf7', borderRadius: 24, width: '100%', maxWidth: 480, padding: 40, boxShadow: '0 25px 50px -12px rgba(0,0,0,0.25)', position: 'relative', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+        
+        {/* Close Button */}
+        <button onClick={onClose} style={{ position: 'absolute', top: 16, right: 16, width: 32, height: 32, borderRadius: '50%', background: '#e5e7eb', border: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', color: '#6b7280' }}>
+          <span style={{ fontSize: 18, lineHeight: 1 }}>&times;</span>
+        </button>
 
+        <h2 style={{ fontSize: 24, fontWeight: 700, color: '#111827', margin: '0 0 8px 0', textAlign: 'center' }}>
+          Connecting farmers near you<span style={{ animation: 'dotsBlink 1.4s infinite both' }}>...</span>
+        </h2>
+        <p style={{ fontSize: 14, color: '#4b5563', margin: '0 0 32px 0', textAlign: 'center' }}>Scanning for verified farmers within a 60km radius...</p>
 
-function BrowseView() {
+        {/* Radar Animation Container */}
+        <div style={{ width: 280, height: 280, borderRadius: '50%', border: '2px solid rgba(22, 101, 52, 0.1)', position: 'relative', overflow: 'hidden', background: '#fff' }}>
+          <div style={{ position: 'absolute', top: '50%', left: 0, right: 0, height: 1, background: 'rgba(22, 101, 52, 0.1)' }} />
+          <div style={{ position: 'absolute', left: '50%', top: 0, bottom: 0, width: 1, background: 'rgba(22, 101, 52, 0.1)' }} />
+          <div style={{ position: 'absolute', inset: 40, borderRadius: '50%', border: '1px solid rgba(22, 101, 52, 0.1)' }} />
+          <div style={{ position: 'absolute', inset: 80, borderRadius: '50%', border: '1px solid rgba(22, 101, 52, 0.1)' }} />
+          <div style={{ position: 'absolute', inset: 120, borderRadius: '50%', border: '1px solid rgba(22, 101, 52, 0.1)' }} />
+          
+          <div className="radar-sweep" style={{ position: 'absolute', top: 0, left: '50%', width: '50%', height: '50%', background: 'linear-gradient(90deg, rgba(22,101,52,0) 0%, rgba(22,101,52,0.15) 100%)', transformOrigin: 'bottom left', borderRight: '2px solid #166534' }} />
+
+          <div className="radar-blip" style={{ position: 'absolute', top: '30%', left: '40%', color: '#166534', animationDelay: '0s' }}><MapPin size={16} fill="currentColor"/></div>
+          <div className="radar-blip" style={{ position: 'absolute', top: '60%', left: '70%', color: '#166534', animationDelay: '1s' }}><User size={16} fill="currentColor"/></div>
+          <div className="radar-blip" style={{ position: 'absolute', top: '20%', left: '80%', color: '#166534', animationDelay: '2s' }}><Sprout size={16} fill="currentColor"/></div>
+          <div className="radar-blip" style={{ position: 'absolute', top: '75%', left: '25%', color: '#166534', animationDelay: '0.5s' }}><MapPin size={16} fill="currentColor"/></div>
+          <div className="radar-blip" style={{ position: 'absolute', top: '45%', left: '15%', color: '#166534', animationDelay: '2.5s' }}><Sprout size={16} fill="currentColor"/></div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function BrowseView({ onCheckout }: { onCheckout?: (item?: any) => void }) {
   const [search, setSearch] = useState('');
   const [category, setCategory] = useState('All');
+  const [radius60, setRadius60] = useState(false);
   const categories = ['All', 'Vegetables', 'Fruits', 'Grains', 'Spices', 'Dairy'];
   const filtered = browseProduce.filter(p => {
     const matchCat = category === 'All' || p.category === category;
     const matchQ = p.name.toLowerCase().includes(search.toLowerCase()) || p.farmer.toLowerCase().includes(search.toLowerCase());
-    return matchCat && matchQ;
+    const matchRad = radius60 ? (p.rating >= 4.7) : true; 
+    return matchCat && matchQ && matchRad;
   });
   return (
     <div className="dsh-content">
@@ -1466,6 +1463,15 @@ function BrowseView() {
         <div>
           <h1 className="dsh-page-title">Browse Produce</h1>
           <p className="dsh-page-sub">Fresh, verified produce from farmers across India.</p>
+        </div>
+        <div style={{ display:'flex', alignItems:'center', gap:10, background:'#f8faf7', padding:'6px 12px', borderRadius:20, border:'1px solid #ece9e3' }}>
+          <span style={{ fontSize:13, fontWeight:600, color: radius60 ? '#166534' : '#8a9a84' }}>60km Radius Only</span>
+          <div 
+            onClick={() => setRadius60(!radius60)}
+            style={{ width:36, height:20, background: radius60 ? '#166534' : '#d0ccc6', borderRadius:20, position:'relative', cursor:'pointer', transition:'0.3s' }}
+          >
+            <div style={{ width:16, height:16, background:'#fff', borderRadius:'50%', position:'absolute', top:2, left: radius60 ? 18 : 2, transition:'0.3s' }} />
+          </div>
         </div>
       </div>
       <div className="dsh-category-pills">
@@ -1486,14 +1492,21 @@ function BrowseView() {
               <div style={{ display:'flex', alignItems:'center', gap:6, marginBottom:10, fontSize:12, color:'#8a9a84' }}>
                 <Phone size={11}/>{p.phone}
               </div>
-              <div className="dsh-produce-footer">
-                <div>
-                  <p className="dsh-produce-price">{p.price}</p>
-                  <p className="dsh-produce-qty">{p.qty} available</p>
-                </div>
-                <div className="dsh-produce-meta">
+              <div className="dsh-produce-footer" style={{ flexDirection: 'column', gap: 12, alignItems: 'stretch' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <div>
+                    <p className="dsh-produce-price">{p.price}</p>
+                    <p className="dsh-produce-qty">{p.qty} available</p>
+                  </div>
                   <div className="dsh-produce-rating"><Star size={11} fill="currentColor"/>{p.rating}</div>
-                  <button className="dsh-order-btn">Order Now</button>
+                </div>
+                <div style={{ display: 'flex', gap: 6 }}>
+                  <button className="dsh-ghost-btn dsh-ghost-btn--border" style={{ flex: 1, padding: '6px 4px', fontSize: 12, borderRadius: 8, justifyContent: 'center', minWidth: 0 }}>
+                    <ShoppingCart size={12} style={{ marginRight: 4, flexShrink: 0 }} /> <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>Cart</span>
+                  </button>
+                  <button className="dsh-cta-btn" style={{ flex: 1, padding: '6px 4px', fontSize: 12, borderRadius: 8, justifyContent: 'center', minWidth: 0 }} onClick={() => onCheckout && onCheckout(p)}>
+                    <Zap size={12} style={{ marginRight: 4, flexShrink: 0 }} /> <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>Buy Now</span>
+                  </button>
                 </div>
               </div>
             </div>
@@ -1639,8 +1652,81 @@ function SpendingView() {
 
 /* ═══════════════════════════ PROFILE VIEW ═══════════════════════════ */
 
+
+/* ════════════════════ SETTINGS VIEW ════════════════════ */
+function SettingsView({ onNavigate }: { onNavigate: (id: string) => void }) {
+  const { user, logout } = useAuth();
+  const navigate = useNavigate();
+  const handleLogout = () => { logout(); navigate('/login'); };
+
+  const sections = [
+    {
+      label: 'Account',
+      items: [
+        { icon: <User size={17}/>,         label: 'Profile',           sub: 'Edit your personal details',    action: () => onNavigate('profile')       },
+        { icon: <Bell size={17}/>,          label: 'Notifications',     sub: 'Alerts and updates',             action: () => onNavigate('notifications') },
+        { icon: <MessageSquare size={17}/>, label: 'Messages',          sub: 'Contact admin or support',       action: () => onNavigate('messages')      },
+      ],
+    },
+    {
+      label: 'More',
+      items: [
+        { icon: <Shield size={17}/>,        label: 'Privacy & Security', sub: 'Password and data settings',   action: () => {}  },
+        { icon: <Phone size={17}/>,         label: 'Help & Support',     sub: 'FAQ and contact us',            action: () => {}  },
+        { icon: <Sparkles size={17}/>,      label: 'About KisanKaDukan', sub: 'Version 1.0 · Made with ❤️ for farmers', action: () => {} },
+      ],
+    },
+  ];
+
+  return (
+    <div className="sv-page">
+      {/* Hero */}
+      <div className="sv-hero" onClick={() => onNavigate('profile')}>
+        <div className="sv-avatar">{user?.fullName?.charAt(0).toUpperCase()}</div>
+        <div className="sv-hero-info">
+          <div className="sv-hero-name">{user?.fullName}</div>
+          <div className="sv-hero-email">{user?.email}</div>
+        </div>
+        <ChevronRight size={16} style={{color:'#c7c7cc'}}/>
+      </div>
+
+      {/* Sections */}
+      {sections.map(section => (
+        <div className="sv-group" key={section.label}>
+          <div className="sv-group-label">{section.label}</div>
+          <div className="sv-group-card">
+            {section.items.map((item, idx) => (
+              <div key={idx}>
+                {idx > 0 && <div className="sv-divider"/>}
+                <button className="sv-row" onClick={item.action}>
+                  <div className="sv-row-icon-wrap">{item.icon}</div>
+                  <div className="sv-row-body">
+                    <span className="sv-row-label">{item.label}</span>
+                    <span className="sv-row-sub">{item.sub}</span>
+                  </div>
+                  <ChevronRight size={14} style={{color:'#c7c7cc',flexShrink:0}}/>
+                </button>
+              </div>
+            ))}
+          </div>
+        </div>
+      ))}
+
+      {/* Logout */}
+      <div className="sv-group" style={{marginTop:8, marginBottom:40}}>
+        <div className="sv-group-card">
+          <button className="sv-row sv-logout" onClick={handleLogout}>
+            <div className="sv-row-icon-wrap sv-logout-icon"><LogOut size={17}/></div>
+            <span className="sv-row-label sv-logout-label">Log out</span>
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 function ProfileView() {
-  const { user, updateProfile } = useAuth();
+  const { user, updateProfile, logout } = useAuth();
   const [editing, setEditing] = useState(false);
   const [saved, setSaved] = useState(false);
   const [form, setForm] = useState({
@@ -1654,148 +1740,160 @@ function ProfileView() {
     updateProfile(form);
     setEditing(false);
     setSaved(true);
-    setTimeout(() => setSaved(false), 3000);
+    setTimeout(() => setSaved(false), 2500);
+  };
+
+  const handleLogout = () => {
+    if (logout) logout();
+    window.location.href = '/';
   };
 
   if (!user) return null;
   const joinDate = new Date(user.joinedAt).toLocaleDateString('en-IN', { day:'numeric', month:'long', year:'numeric' });
 
   return (
-    <div className="dsh-content">
-      <div className="dsh-page-header">
-        <div>
-          <h1 className="dsh-page-title">My Profile</h1>
-          <p className="dsh-page-sub">Manage your account information.</p>
-        </div>
-        {!editing ? (
-          <button className="dsh-cta-btn" onClick={() => setEditing(true)}>
-            <Edit2 size={15}/> Edit Profile
-          </button>
-        ) : (
-          <div style={{ display:'flex', gap:10 }}>
-            <button className="dsh-ghost-btn dsh-ghost-btn--border" onClick={() => { setEditing(false); setForm({ fullName:user.fullName, mobile:user.mobile, location:user.location, landSurveyNumber:user.landSurveyNumber??'' }); }}>
-              Cancel
-            </button>
-            <button className="dsh-cta-btn" onClick={handleSave}>
-              <Save size={15}/> Save Changes
-            </button>
-          </div>
-        )}
-      </div>
-
+    <div className="pv-page">
       {saved && (
-        <div className="dsh-success-banner">
-          <CheckCircle2 size={16}/>
-          Profile updated successfully!
+        <div className="pv-saved-banner">
+          <CheckCircle2 size={14}/> Profile saved!
         </div>
       )}
 
-      <div className="dsh-two-col">
-        {/* Profile card — full width */}
-        <div className="dsh-card dsh-card--span2">
-          <div style={{ padding:'28px', display:'flex', gap:24, alignItems:'center', borderBottom:'1px solid #f0ede8', flexWrap:'wrap' }}>
-            <div className="dsh-profile-avatar">{user.fullName.charAt(0).toUpperCase()}</div>
-            <div>
-              <h2 style={{ fontFamily:'Fraunces,Georgia,serif', fontSize:22, fontWeight:800, color:'#0a1a08', margin:'0 0 4px', letterSpacing:'-0.5px' }}>
-                {user.fullName}
-              </h2>
-              <p style={{ fontSize:13, color:'#8a9a84', margin:'0 0 8px' }}>{user.email}</p>
-              <div style={{ display:'flex', gap:8, flexWrap:'wrap' }}>
-                <span className={`dsh-role-chip dsh-role-chip--${user.role}`}>
-                  {user.role === 'farmer' ? <Wheat size={11}/> : <ShoppingCart size={11}/>}
-                  {user.role === 'farmer' ? 'Farmer Account' : 'Buyer Account'}
-                </span>
-                <span style={{ fontSize:11, color:'#b0a89f', alignSelf:'center' }}>
-                  <Calendar size={11} style={{display:'inline',marginRight:4}}/>Member since {joinDate}
-                </span>
-              </div>
+      {/* ── Top Bar ── */}
+      <div className="pv-topbar">
+        <span className="pv-topbar-placeholder"/>
+        <span className="pv-topbar-title">Profile</span>
+        {!editing
+          ? <button className="pv-topbar-action" onClick={() => setEditing(true)}>Edit</button>
+          : <div style={{display:'flex',gap:12}}>
+              <button className="pv-topbar-action" style={{color:'#8a9a84'}} onClick={() => { setEditing(false); setForm({ fullName:user.fullName, mobile:user.mobile, location:user.location, landSurveyNumber:user.landSurveyNumber??'' }); }}>Cancel</button>
+              <button className="pv-topbar-action pv-topbar-action--done" onClick={handleSave}>Done</button>
             </div>
+        }
+      </div>
+
+      {/* ── Hero Avatar ── */}
+      <div className="pv-hero">
+        <div className="pv-avatar">{user.fullName.charAt(0).toUpperCase()}</div>
+        <div className="pv-hero-name">
+          {editing
+            ? <input className="pv-hero-name-input" value={form.fullName} onChange={e => setForm(p => ({...p, fullName: e.target.value}))}/>
+            : user.fullName}
+        </div>
+        <div className="pv-hero-role">{user.role === 'farmer' ? 'Grain Farmer' : 'Buyer Account'}</div>
+      </div>
+
+      {/* ── Account Informations ── */}
+      <div className="pv-group">
+        <div className="pv-group-label">Account Informations</div>
+        <div className="pv-group-card">
+          <div className="pv-row">
+            <span className="pv-row-key">User id</span>
+            <span className="pv-row-val pv-row-val--muted">{user.email}</span>
           </div>
-          <div style={{ padding:'24px 28px' }}>
-            <h3 style={{ fontSize:13, fontWeight:700, color:'#8a9a84', textTransform:'uppercase', letterSpacing:'0.6px', margin:'0 0 20px' }}>
-              Account Details
-            </h3>
-            <div className="dsh-form-grid">
-              <div className="dsh-form-field">
-                <label className="dsh-form-label"><User size={13}/> Full Name</label>
-                {editing
-                  ? <input className="dsh-form-input" value={form.fullName} onChange={e => setForm(p=>({...p,fullName:e.target.value}))}/>
-                  : <p className="dsh-profile-value">{user.fullName}</p>}
-              </div>
-              <div className="dsh-form-field">
-                <label className="dsh-form-label"><Mail size={13}/> Email Address</label>
-                <p className="dsh-profile-value dsh-profile-value--muted">{user.email} <span style={{fontSize:10,background:'#f0ede8',padding:'2px 6px',borderRadius:20,marginLeft:4}}>Cannot change</span></p>
-              </div>
-              <div className="dsh-form-field">
-                <label className="dsh-form-label"><Phone size={13}/> Mobile Number</label>
-                {editing
-                  ? <input className="dsh-form-input" value={form.mobile} onChange={e => setForm(p=>({...p,mobile:e.target.value}))}/>
-                  : <p className="dsh-profile-value">{user.mobile}</p>}
-              </div>
-              <div className="dsh-form-field">
-                <label className="dsh-form-label"><MapPin size={13}/> {user.role==='farmer'?'Farm Address':'City'}</label>
-                {editing
-                  ? <input className="dsh-form-input" value={form.location} onChange={e => setForm(p=>({...p,location:e.target.value}))}/>
-                  : <p className="dsh-profile-value">{user.location}</p>}
-              </div>
-              {user.role === 'farmer' && (
-                <div className="dsh-form-field">
-                  <label className="dsh-form-label"><FileText size={13}/> Land Survey Number</label>
-                  {editing
-                    ? <input className="dsh-form-input" value={form.landSurveyNumber} onChange={e => setForm(p=>({...p,landSurveyNumber:e.target.value}))}/>
-                    : <p className="dsh-profile-value">{user.landSurveyNumber || '—'}</p>}
-                </div>
-              )}
-              <div className="dsh-form-field">
-                <label className="dsh-form-label"><Calendar size={13}/> Joined</label>
-                <p className="dsh-profile-value">{joinDate}</p>
-              </div>
-            </div>
+          <div className="pv-divider"/>
+          <div className="pv-row">
+            <span className="pv-row-key">Email Address</span>
+            <span className="pv-row-val pv-row-val--muted">{user.email}</span>
+          </div>
+          <div className="pv-divider"/>
+          <div className="pv-row">
+            <span className="pv-row-key">Password</span>
+            <span className="pv-row-val pv-row-val--muted">••••••••</span>
+          </div>
+          <div className="pv-divider"/>
+          <div className="pv-row">
+            <span className="pv-row-key">Country</span>
+            <span className="pv-row-val pv-row-val--muted">India</span>
+          </div>
+          <div className="pv-divider"/>
+          <div className="pv-row">
+            <span className="pv-row-key">Other infos made</span>
+            <span className="pv-row-val pv-row-val--muted">{joinDate}</span>
           </div>
         </div>
+      </div>
 
-        {/* Account stats */}
-        <div className="dsh-card">
-          <div className="dsh-card-header"><h2 className="dsh-card-title">Account Summary</h2></div>
-          <div style={{ padding:'20px', display:'flex', flexDirection:'column', gap:16 }}>
-            {[
-              { label: user.role==='farmer' ? 'Active Listings' : 'Total Orders', value: user.role==='farmer' ? '4' : '6' },
-              { label: user.role==='farmer' ? 'Total Revenue' : 'Total Spent', value: user.role==='farmer' ? '₹1,84,100' : '₹83,900' },
-              { label: user.role==='farmer' ? 'Total Buyers' : 'Farmers Connected', value: user.role==='farmer' ? '12' : '8' },
-              { label: 'Member Status', value: 'Verified' },
-            ].map(s => (
-              <div key={s.label} style={{ display:'flex', justifyContent:'space-between', alignItems:'center', paddingBottom:12, borderBottom:'1px solid #f5f2ee' }}>
-                <span style={{ fontSize:13, color:'#8a9a84' }}>{s.label}</span>
-                <span style={{ fontSize:14, fontWeight:700, color:'#0a1a08' }}>{s.value}</span>
-              </div>
-            ))}
+      {/* ── Personal Details ── */}
+      <div className="pv-group">
+        <div className="pv-group-label">Personal Details</div>
+        <div className="pv-group-card">
+          <div className="pv-row">
+            <span className="pv-row-key">Full name</span>
+            {editing
+              ? <input className="pv-row-input" value={form.fullName} onChange={e => setForm(p => ({...p, fullName: e.target.value}))}/>
+              : <span className="pv-row-val pv-row-val--muted">{user.fullName} <ChevronRight size={13} className="pv-chevron"/></span>}
           </div>
+          <div className="pv-divider"/>
+          <div className="pv-row">
+            <span className="pv-row-key">Phone Number</span>
+            {editing
+              ? <input className="pv-row-input" value={form.mobile} onChange={e => setForm(p => ({...p, mobile: e.target.value}))}/>
+              : <span className="pv-row-val pv-row-val--muted">{user.mobile} <ChevronRight size={13} className="pv-chevron"/></span>}
+          </div>
+          <div className="pv-divider"/>
+          <div className="pv-row">
+            <span className="pv-row-key">Location</span>
+            {editing
+              ? <input className="pv-row-input" value={form.location} onChange={e => setForm(p => ({...p, location: e.target.value}))}/>
+              : <span className="pv-row-val pv-row-val--muted">{user.location} <ChevronRight size={13} className="pv-chevron"/></span>}
+          </div>
+          {user.role === 'farmer' && (<>
+            <div className="pv-divider"/>
+            <div className="pv-row">
+              <span className="pv-row-key">Right side made</span>
+              {editing
+                ? <input className="pv-row-input" value={form.landSurveyNumber} onChange={e => setForm(p => ({...p, landSurveyNumber: e.target.value}))}/>
+                : <span className="pv-row-val pv-row-val--muted">{user.landSurveyNumber || '—'} <ChevronRight size={13} className="pv-chevron"/></span>}
+            </div>
+          </>)}
         </div>
+      </div>
 
-        {/* Security */}
-        <div className="dsh-card">
-          <div className="dsh-card-header"><h2 className="dsh-card-title">Security</h2></div>
-          <div style={{ padding:'20px', display:'flex', flexDirection:'column', gap:12 }}>
-            <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', padding:'14px 0', borderBottom:'1px solid #f5f2ee' }}>
-              <div>
-                <p style={{ margin:0, fontSize:13, fontWeight:600, color:'#2a3a26' }}>Password</p>
-                <p style={{ margin:0, fontSize:12, color:'#8a9a84' }}>Last changed: never</p>
-              </div>
-              <button className="dsh-ghost-btn dsh-ghost-btn--border">Change</button>
-            </div>
-            <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', padding:'14px 0' }}>
-              <div>
-                <p style={{ margin:0, fontSize:13, fontWeight:600, color:'#2a3a26' }}>Two-Factor Auth</p>
-                <p style={{ margin:0, fontSize:12, color:'#8a9a84' }}>Add extra security</p>
-              </div>
-              <button className="dsh-ghost-btn dsh-ghost-btn--border">Enable</button>
-            </div>
-          </div>
+      {/* ── General ── */}
+      <div className="pv-group">
+        <div className="pv-group-label">General</div>
+        <div className="pv-group-card">
+          <button className="pv-row pv-row--btn">
+            <span className="pv-row-key">Account settings</span>
+            <ChevronRight size={13} className="pv-chevron"/>
+          </button>
+          <div className="pv-divider"/>
+          <button className="pv-row pv-row--btn">
+            <span className="pv-row-key">Notifications</span>
+            <ChevronRight size={13} className="pv-chevron"/>
+          </button>
+          <div className="pv-divider"/>
+          <button className="pv-row pv-row--btn">
+            <span className="pv-row-key">Privacy preferences</span>
+            <ChevronRight size={13} className="pv-chevron"/>
+          </button>
+          <div className="pv-divider"/>
+          <button className="pv-row pv-row--btn">
+            <span className="pv-row-key">Help center</span>
+            <ChevronRight size={13} className="pv-chevron"/>
+          </button>
+          <div className="pv-divider"/>
+          <button className="pv-row pv-row--btn">
+            <span className="pv-row-key">Sign out</span>
+            <ChevronRight size={13} className="pv-chevron"/>
+          </button>
+        </div>
+      </div>
+
+      {/* ── Logout ── */}
+      <div className="pv-group" style={{marginBottom:40}}>
+        <div className="pv-group-card">
+          <button className="pv-row pv-row--btn pv-logout-btn" onClick={handleLogout}>
+            <span>Log out</span>
+          </button>
         </div>
       </div>
     </div>
   );
 }
+
+
 
 /* ═══════════════════════════ SIDEBAR + SHELL ═══════════════════════════ */
 
@@ -1815,10 +1913,116 @@ const buyerNav = [
   { icon:<TrendingUp size={16}/>,      label:'Spending',  id:'spending' },
 ];
 
+function CheckoutView({ item, onConfirm, onCancel }: { item: any, onConfirm: () => void, onCancel: () => void }) {
+  const [form, setForm] = useState({ address: '', email: '', phone: '', quantity: '50' });
+  const [loading, setLoading] = useState(false);
+
+  const pricePerKg = item ? parseInt(item.price?.replace(/\D/g, '') || '45', 10) : 45;
+  const total = pricePerKg * parseInt(form.quantity || '0', 10);
+
+  const handleConfirm = () => {
+    setLoading(true);
+    setTimeout(() => {
+      setLoading(false);
+      onConfirm();
+    }, 1500);
+  };
+
+  return (
+    <div className="dsh-content" style={{ maxWidth: 800, margin: '0 auto' }}>
+      <div className="dsh-page-header">
+        <div>
+          <button className="dsh-ghost-btn" style={{ padding: 0, marginBottom: 12, color: '#8a9a84' }} onClick={onCancel}>
+            &larr; Back to browsing
+          </button>
+          <h1 className="dsh-page-title">Secure Checkout</h1>
+          <p className="dsh-page-sub">Review your order details and provide delivery information.</p>
+        </div>
+      </div>
+
+      <div className="dsh-two-col">
+        <div className="dsh-card" style={{ padding: 24, display: 'flex', flexDirection: 'column', gap: 20 }}>
+          <h2 style={{ fontSize: 16, fontWeight: 700, color: '#111827', margin: 0 }}>Delivery Details</h2>
+          <div className="dsh-form-field">
+            <label className="dsh-form-label"><MapPin size={13}/> Full Address</label>
+            <textarea className="dsh-form-input" style={{ minHeight: 80, resize: 'none' }} placeholder="Enter complete delivery address with PIN code..." value={form.address} onChange={e => setForm({...form, address: e.target.value})} />
+          </div>
+          <div className="dsh-two-col" style={{ gridTemplateColumns: '1fr 1fr', gap: 16 }}>
+            <div className="dsh-form-field">
+              <label className="dsh-form-label"><Mail size={13}/> Email Address</label>
+              <input type="email" className="dsh-form-input" placeholder="buyer@example.com" value={form.email} onChange={e => setForm({...form, email: e.target.value})} />
+            </div>
+            <div className="dsh-form-field">
+              <label className="dsh-form-label"><Phone size={13}/> Phone Number</label>
+              <input type="tel" className="dsh-form-input" placeholder="+91 99999 99999" value={form.phone} onChange={e => setForm({...form, phone: e.target.value})} />
+            </div>
+          </div>
+        </div>
+
+        <div className="dsh-card" style={{ padding: 24, height: 'fit-content' }}>
+          <h2 style={{ fontSize: 16, fontWeight: 700, color: '#111827', margin: '0 0 20px 0' }}>Order Summary</h2>
+          <div style={{ display: 'flex', gap: 16, alignItems: 'center', paddingBottom: 20, borderBottom: '1px solid #f0ede8', marginBottom: 20 }}>
+            <div style={{ width: 48, height: 48, borderRadius: 12, background: '#f0fdf4', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 24 }}>
+              {item ? <ProduceIcon name={item.name} size={24}/> : '🍅'}
+            </div>
+            <div>
+              <p style={{ margin: 0, fontWeight: 600, color: '#111827' }}>{item ? item.name : 'Fresh Produce'}</p>
+              <p style={{ margin: 0, fontSize: 13, color: '#8a9a84' }}>From {item ? item.farmer : 'Local Farm'}</p>
+            </div>
+          </div>
+          <div className="dsh-form-field" style={{ marginBottom: 20 }}>
+            <label className="dsh-form-label">Quantity (kg)</label>
+            <input type="number" className="dsh-form-input" value={form.quantity} onChange={e => setForm({...form, quantity: e.target.value})} />
+          </div>
+          <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 12, fontSize: 14, color: '#4b5563' }}>
+            <span>Price per kg</span>
+            <span>₹{pricePerKg}</span>
+          </div>
+          <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 12, fontSize: 14, color: '#4b5563' }}>
+            <span>Delivery Fee</span>
+            <span>₹250</span>
+          </div>
+          <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 20, paddingTop: 20, borderTop: '1px solid #f0ede8', fontSize: 18, fontWeight: 700, color: '#111827' }}>
+            <span>Total Pay</span>
+            <span>₹{(total + 250).toLocaleString('en-IN')}</span>
+          </div>
+          <button className="dsh-cta-btn" style={{ width: '100%', justifyContent: 'center', marginTop: 24, padding: '12px', fontSize: 15 }} onClick={handleConfirm} disabled={loading}>
+            {loading ? 'Processing...' : `Pay ₹${(total + 250).toLocaleString('en-IN')} & Confirm`}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function OrderSuccessView({ onTrackOrder }: { onTrackOrder: () => void }) {
+  return (
+    <div className="dsh-content" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '100%', padding: '40px 20px', animation: 'kkv2FadeUp 0.5s ease' }}>
+      <div style={{ 
+        width: 96, height: 96, borderRadius: '50%', background: '#dcfce7', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 24, 
+        animation: 'scaleIn 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275)'
+      }}>
+        <CheckCircle2 size={48} color="#16a34a" />
+      </div>
+      <h1 style={{ fontSize: 28, fontWeight: 800, color: '#111827', margin: '0 0 12px 0' }}>Order Successful!</h1>
+      <p style={{ fontSize: 15, color: '#4b5563', margin: '0 0 32px 0', textAlign: 'center', maxWidth: 400, lineHeight: 1.5 }}>
+        Your order has been securely placed. We've notified the farmer and arranged for logistics pickup.
+      </p>
+      <div style={{ display: 'flex', gap: 16 }}>
+        <button className="dsh-cta-btn" style={{ padding: '12px 24px', fontSize: 15 }} onClick={onTrackOrder}>
+          <Truck size={18} /> Track Order
+        </button>
+      </div>
+    </div>
+  );
+}
+
 export default function DashboardPage() {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
   const [activeNav, setActiveNav] = useState('dashboard');
+  const [showRadarModal, setShowRadarModal] = useState(false);
+  const [checkoutItem, setCheckoutItem] = useState<any>(null);
   
   const [globalSearch, setGlobalSearch] = useState('');
   const [searchFocused, setSearchFocused] = useState(false);
@@ -1870,9 +2074,12 @@ export default function DashboardPage() {
   const handleNav = (id: string) => { setActiveNav(id); };
 
   const renderView = () => {
+    if (activeNav === 'settings') return <SettingsView onNavigate={handleNav} />;
     if (activeNav === 'profile') return <ProfileView />;
     if (activeNav === 'messages') return <MessagesView />;
     if (activeNav === 'notifications') return <NotificationsView />;
+    if (activeNav === 'checkout') return <CheckoutView item={checkoutItem} onConfirm={() => setActiveNav('order_success')} onCancel={() => setActiveNav('browse')} />;
+    if (activeNav === 'order_success') return <OrderSuccessView onTrackOrder={() => setActiveNav('orders')} />;
     if (isFarmer) {
       switch (activeNav) {
         case 'dashboard': return <FarmerDashboardView onNavigate={handleNav} />;
@@ -1884,12 +2091,12 @@ export default function DashboardPage() {
       }
     } else {
       switch (activeNav) {
-        case 'dashboard': return <BuyerDashboardView />;
+        case 'dashboard': return <BuyerDashboardView onCheckout={(item) => { setCheckoutItem(item); setActiveNav('checkout'); }} />;
         case 'orders':    return <OrdersView orders={allBuyerOrders} role="buyer" />;
-        case 'browse':    return <BrowseView />;
+        case 'browse':    return <BrowseView onCheckout={(item) => { setCheckoutItem(item); setActiveNav('checkout'); }} />;
         case 'farmers':   return <FarmersView />;
         case 'spending':  return <SpendingView />;
-        default:          return <BuyerDashboardView />;
+        default:          return <BuyerDashboardView onCheckout={(item) => { setCheckoutItem(item); setActiveNav('checkout'); }} />;
       }
     }
   };
@@ -2013,15 +2220,9 @@ export default function DashboardPage() {
               )}
             </div>
 
-            <button className="dsh-notif-btn" aria-label="Messages" onClick={() => handleNav('messages')}>
-              <MessageSquare size={18}/>
+            <button className="dsh-notif-btn" aria-label="Settings" onClick={() => handleNav('settings')}>
+              <Settings size={16}/>
             </button>
-
-            <button className="dsh-notif-btn" aria-label="Notifications" onClick={() => handleNav('notifications')}>
-              <Bell size={18}/><span className="dsh-notif-dot"/>
-            </button>
-
-            {/* User profile removed from topbar */}
           </div>
         </header>
 
@@ -2044,6 +2245,7 @@ export default function DashboardPage() {
           </button>
         ))}
       </nav>
+      {showRadarModal && <RadarScannerModal onClose={() => setShowRadarModal(false)} />}
     </div>
   );
 }

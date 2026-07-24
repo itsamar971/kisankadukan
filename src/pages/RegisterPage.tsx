@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import {
@@ -80,6 +80,10 @@ export default function RegisterPage() {
   const [mobile, setMobile] = useState('');
   const [location, setLocation] = useState('');
   const [landSurveyNumber, setLandSurveyNumber] = useState('');
+  const [profilePhoto, setProfilePhoto] = useState<File | null>(null);
+  const [coordinates, setCoordinates] = useState<{lat: number, lng: number} | null>(null);
+  const [locating, setLocating] = useState(false);
+  const photoInputRef = useRef<HTMLInputElement>(null);
 
   const totalSteps = 3;
 
@@ -123,6 +127,8 @@ export default function RegisterPage() {
     const res = await register(email, password, role, {
       fullName, mobile, location,
       landSurveyNumber: role === 'farmer' ? landSurveyNumber : undefined,
+      coordinates, // Passed to backend
+      profilePhoto: profilePhoto?.name, // In real app, upload this file
     });
     if (res.success) navigate('/dashboard');
     else setError(res.error || 'Failed to create account.');
@@ -195,6 +201,23 @@ export default function RegisterPage() {
             {step === 1 && (
               <div className="uui-step-content">
                 <div className="uui-form">
+                  <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', marginBottom: 24 }}>
+                    <div 
+                      onClick={() => photoInputRef.current?.click()}
+                      style={{ width: 80, height: 80, borderRadius: '50%', background: '#f8faf7', border: '2px dashed #d0ccc6', display: 'flex', alignItems: 'center', justifyContents: 'center', cursor: 'pointer', overflow: 'hidden' }}
+                    >
+                      {profilePhoto ? (
+                        <img src={URL.createObjectURL(profilePhoto)} alt="Profile" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                      ) : (
+                        <div style={{ margin: 'auto', color: '#8a9a84', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+                          <User size={24} />
+                          <span style={{ fontSize: 10, marginTop: 4 }}>Add Photo</span>
+                        </div>
+                      )}
+                    </div>
+                    <input type="file" ref={photoInputRef} accept="image/*" style={{ display: 'none' }} onChange={e => e.target.files && setProfilePhoto(e.target.files[0])} />
+                  </div>
+
                   <div className="uui-field-group">
                     <label htmlFor="reg-fullname" className="uui-label">Full Name</label>
                     <input
@@ -237,6 +260,18 @@ export default function RegisterPage() {
                       className={`uui-input ${focused === 'location' ? 'uui-input--focused' : ''}`}
                       placeholder={role === 'buyer' ? 'e.g. Mumbai, Pune' : 'e.g. Village Takli, Nashik'}
                     />
+                    <button type="button" onClick={() => {
+                      setLocating(true);
+                      navigator.geolocation.getCurrentPosition(
+                        pos => {
+                          setCoordinates({ lat: pos.coords.latitude, lng: pos.coords.longitude });
+                          setLocating(false);
+                        },
+                        err => { alert("Location access denied or unavailable."); setLocating(false); }
+                      );
+                    }} style={{ background: 'none', border: 'none', color: '#166534', fontSize: 12, fontWeight: 600, display: 'flex', alignItems: 'center', gap: 4, marginTop: 8, cursor: 'pointer' }}>
+                      <MapPin size={12}/> {locating ? 'Locating...' : coordinates ? 'Coordinates saved: ' + coordinates.lat.toFixed(2) + ', ' + coordinates.lng.toFixed(2) : 'Detect Current Location'}
+                    </button>
                   </div>
 
                   {role === 'farmer' && (

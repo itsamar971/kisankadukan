@@ -1,0 +1,259 @@
+18: --card-padding: 12px;
+19: --card-gap: 12px;
+25: --card-padding: 20px;
+33: --card-padding: 28px;
+34: --card-gap: 20px;
+184: padding: 48px 52px;
+231: gap: 40px;
+238: gap: 10px;
+270: gap: 6px;
+278: padding: 5px 12px;
+310: padding: 20px 24px;
+348: padding: 20px 24px;
+389: padding: 48px 40px;
+413: margin: 0 0 10px;
+453: gap: 10px;
+455: padding: 12px 16px;
+478: gap: 12px;
+507: gap: 6px;
+529: padding: 11px 14px;
+571: gap: 10px;
+605: padding: 11px 14px;
+620: padding: 13px 20px;
+670: padding: 4px;
+671: gap: 4px;
+677: padding: 10px 0;
+699: padding: 40px 24px;
+748: padding: 24px 36px;
+766: gap: 10px;
+784: padding: 12px 0;
+796: margin: 0 0 4px;
+809: gap: 14px;
+815: gap: 5px;
+831: padding: 9px 13px;
+913: padding: 9.5px 18px;
+930: padding: 9.5px 18px;
+946: padding: 9.5px 18px;
+957: gap: 10px;
+969: padding: 7px 12px;
+1026: gap: 6px;
+1044: gap: 12px;
+1050: gap: 12px;
+1051: padding: 14px 16px;
+1096: gap: 12px;
+1198: gap: 36px;
+1199: padding: 44px 52px;
+1207: gap: 10px;
+1236: padding: 2px 7px;
+1244: gap: 6px;
+1252: padding: 5px 12px;
+1287: gap: 20px;
+1288: padding: 18px 22px;
+1300: gap: 3px;
+1331: padding: 22px 24px;
+1348: margin: 0 0 14px;
+1354: gap: 10px;
+1384: gap: 6px;
+1408: gap: 10px;
+1414: gap: 10px;
+1430: padding: 48px 44px;
+1465: margin: 0 0 10px;
+1505: gap: 10px;
+1507: padding: 12px 16px;
+1531: gap: 12px;
+1552: gap: 18px;
+1560: gap: 6px;
+1572: gap: 5px;
+1585: padding: 12px 15px;
+1631: gap: 10px;
+1671: padding: 12px 14px;
+1692: gap: 5px;
+1723: padding: 14px 22px;
+1793: gap: 6px;
+1799: gap: 6px;
+1827: gap: 20px;
+1839: gap: 10px;
+1844: padding: 13px 18px;
+1874: gap: 12px;
+1880: gap: 14px;
+1881: padding: 18px 16px;
+1907: gap: 10px;
+1940: padding: 2px 7px;
+1972: gap: 5px;
+1981: gap: 6px;
+1994: .kkv2-right { padding: 36px 24px; background: #fff; }
+2001: .kkv2-right { padding: 28px 20px; }
+2047: gap: 10px;
+2048: padding: 10px 12px 10px;
+2080: padding: 4px;
+2090: gap: 5px;
+2098: padding: 4px 10px;
+2101: margin: 0 12px 8px;
+2110: padding: 0 12px;
+2119: gap: 2px;
+2120: padding: 0 6px;
+2128: gap: 10px;
+2129: padding: 7px 10px;
+2174: gap: 2px;
+2175: padding: 12px 4px 12px;
+2185: gap: 10px;
+2186: padding: 9.5px 12px;
+2208: gap: 10px;
+2209: padding: 12px 14px;
+2238: margin: 0 0 2px;
+2248: gap: 3px;
+2275: padding: 0 28px;
+2288: padding: 6px;
+2391: gap: 7px;
+2392: padding: 11px 18px;
+2482: gap: 4px;
+2518: padding: 18px 20px 14px;
+2520: gap: 10px;
+2535: gap: 4px;
+2543: padding: 4px 8px;
+2567: padding: 10px 20px;
+2574: padding: 13px 20px;
+2587: gap: 10px;
+2604: gap: 5px;
+2617: gap: 5px;
+2626: padding: 3px 9px;
+2647: gap: 12px;
+2648: padding: 13px 20px;
+2674: .dsh-order-name { font-size: 13px; font-weight: 600; color: #1a2a18; margin: 0 0 2px; }
+2675: .dsh-order-item { font-size: 11.5px; color: #8a9a84; margin: 0; }
+2681: gap: 4px;
+2702: padding: 11px 20px;
+2722: gap: 12px;
+2733: gap: 3px;
+2743: padding: 10px 20px 14px;
+2751: gap: 6px;
+2797: padding: 7px 12px 7px 32px;
+2819: padding: 20px;
+2837: padding: 20px 16px 12px;
+2849: padding: 3px 8px;
+2856: .dsh-produce-card-body { padding: 14px 16px 16px; }
+2862: margin: 0 0 5px;
+2868: gap: 5px;
+2871: margin: 0 0 12px;
+2885: margin: 0 0 2px;
+2899: gap: 6px;
+2905: gap: 3px;
+2913: padding: 5px 12px;
+3001: .dsh-produce-grid { grid-template-columns: 1fr 1fr; padding: 14px; gap: 12px; }
+3006: .dsh-topbar { padding: 0 14px; }
+3028: gap: 10px;
+3036: gap: 6px;
+3137: gap: 4px;
+3140: padding: 4px;
+3148: gap: 6px;
+3149: padding: 8px 14px;
+3169: padding: 1px 6px;
+3220: padding: 20px;
+3250: margin: 0 0 4px;
+3252: .dsh-people-type { font-size: 12px; color: #8a9a84; margin: 0 0 4px; }
+3256: gap: 4px;
+3273: padding: 10px 6px;
+3285: .dsh-people-stat p { font-size: 10px; color: #a0988f; margin: 2px 0 0; }
+3294: padding: 3px 8px;
+3300: .dsh-action-btns { display: flex; gap: 6px; }
+3322: padding: 9px 14px !important;
+3342: margin: 0 0 20px;
+3353: .dsh-form-field { display: flex; flex-direction: column; gap: 6px; }
+3358: gap: 5px;
+3367: padding: 10px 13px;
+3405: padding: 10px 0;
+3413: gap: 5px;
+3416: padding: 4px 10px;
+3428: gap: 10px;
+3429: padding: 13px 18px;
+3439: .dsh-empty-state p { font-size: 14px; color: #a0988f; margin: 0; }
+3462: padding: 22px;
+3522: margin: 0 0 10px;
+3533: gap: 4px;
+3538: padding: 4px 10px;
+3552: gap: 20px;
+3562: gap: 20px;
+3569: gap: 12px;
+3570: padding: 20px;
+3609: margin: 0 0 2px;
+3627: gap: 12px;
+3628: padding: 14px 20px;
+3656: margin: 0 0 2px;
+3659: gap: 6px;
+3666: padding: 1px 5px;
+3682: gap: 10px;
+3690: padding: 4px 10px;
+3704: padding: 20px;
+3733: margin: 0 0 3px;
+3739: margin: 0 0 6px;
+3748: gap: 4px;
+3754: padding: 24px 20px;
+3758: gap: 20px;
+3794: gap: 20px;
+3802: gap: 6px;
+3822: gap: 12px;
+3823: padding: 12px 20px;
+3839: margin: 0 0 2px;
+3852: gap: 4px;
+3865: padding: 2px 7px;
+3906: padding: 10px 8px;
+4009: padding: 0 4px;
+4018: gap: 4px;
+4023: padding: 10px 4px 8px;
+4106: padding: 6px 16px 6px 36px;
+4157: gap: 20px;
+4171: gap: 20px;
+4180: padding: 24px 28px;
+4221: gap: 6px;
+4227: padding: 5px 12px;
+4245: margin: 0 0 20px;
+4257: padding: 10px 20px;
+4294: padding: 12px 14px;
+4309: gap: 6px;
+4334: padding: 2.5px 7px;
+4345: padding: 2.5px 7px;
+4355: margin: 0 0 1px;
+4372: padding: 14px 18px;
+4388: margin: 0 0 1px;
+4401: gap: 4px;
+4403: padding: 3px;
+4408: padding: 5px 12px;
+4447: padding: 6px 12px;
+4465: padding: 8px 30px 0;
+4499: padding: 10px 16px;
+4504: padding: 14px 16px;
+4517: gap: 10px;
+4534: .dsh-cell-name { font-weight: 700; color: #0f172a; margin: 0 0 2px; }
+4535: .dsh-cell-sub  { font-size: 11px; color: #94a3b8; margin: 0; }
+4545: padding: 5px 12px;
+4565: margin: 10px auto;
+4597: padding: 4px 10px;
+4607: gap: 4px;
+4612: padding: 2.5px 8px;
+4628: gap: 6px;
+4635: padding: 7px 10px;
+4665: .dsh-crop-name { font-size: 12px; font-weight: 700; color: #0f172a; margin: 0 0 1px; }
+4666: .dsh-crop-msp  { font-size: 10px; color: #94a3b8; margin: 0; }
+4710: gap: 12px;
+4717: gap: 12px;
+4718: padding: 10px 12px;
+4746: .dsh-mentor-name { font-size: 13px; font-weight: 700; color: #0f172a; margin: 0 0 2px; }
+4747: .dsh-mentor-sub  { font-size: 11px; color: #64748b; margin: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+4755: padding: 5px 12px;
+4769: padding: 10px;
+4817: .dsh-stats-4col  { grid-template-columns: 1fr 1fr !important; gap: 12px !important; }
+4821: .dsh-donz-stats  { grid-template-columns: 1fr 1fr !important; gap: 12px !important; }
+4822: .dsh-ring-grid   { grid-template-columns: 1fr 1fr !important; gap: 10px !important; }
+4830: gap: 10px !important;
+4842: gap: 12px !important;
+4844: margin: 12px !important;
+4849: padding: 10px !important;
+4856: .dsh-table th { padding: 8px 10px !important; font-size: 10px !important; }
+4857: .dsh-table td { padding: 10px 10px !important; }
+4878: padding: 7px 14px !important;
+4888: .dsh-donz-stat { min-height: 110px !important; padding: 16px !important; }
+4892: .dsh-hero-banner { padding: 18px 16px !important; border-radius: 20px !important; }
+4918: .dsh-saas-stat   { padding: 12px !important; }
+4921: .dsh-card-header { padding: 14px 16px 10px !important; }
+4962: gap: 12px;
+4973: .dsh-topbar { padding: 0 14px !important; }
