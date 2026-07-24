@@ -8,7 +8,7 @@ import {
   Wheat, Truck, CheckCircle2, Clock, BarChart3, Sprout,
   IndianRupee, Search, Filter, Download, Edit2, Trash2, Eye,
   User, Save, AlertCircle, Tractor, FileText, Calendar, Package2,
-  MessageSquare, Sparkles, ArrowRight, Apple, Target, Zap, Shield
+  MessageSquare, Sparkles, ArrowRight, Apple, Target, Zap, Shield, Home
 } from 'lucide-react';
 
 /* ═══════════════════════════ MOCK DATA ═══════════════════════════ */
@@ -1898,7 +1898,7 @@ function ProfileView() {
 /* ═══════════════════════════ SIDEBAR + SHELL ═══════════════════════════ */
 
 const farmerNav = [
-  { icon:<LayoutDashboard size={16}/>, label:'Dashboard', id:'dashboard' },
+  { icon:<Home size={16}/>, label:'Home', id:'dashboard' },
   { icon:<Package size={16}/>,         label:'My Listings', id:'listings' },
   { icon:<ShoppingCart size={16}/>,    label:'Orders',     id:'orders'   },
   { icon:<IndianRupee size={16}/>,     label:'Revenue',    id:'revenue'  },
@@ -1906,7 +1906,7 @@ const farmerNav = [
 ];
 
 const buyerNav = [
-  { icon:<LayoutDashboard size={16}/>, label:'Dashboard', id:'dashboard' },
+  { icon:<Home size={16}/>, label:'Home', id:'dashboard' },
   { icon:<ShoppingCart size={16}/>,    label:'My Orders', id:'orders'   },
   { icon:<Package size={16}/>,         label:'Browse',    id:'browse'   },
   { icon:<Users size={16}/>,           label:'Farmers',   id:'farmers'  },
@@ -2182,7 +2182,7 @@ export default function DashboardPage() {
 
           {/* Mobile-only centered title */}
           <div className="dsh-topbar-mobile-title">
-            {activeNav === 'dashboard' ? (isFarmer ? 'Farm Overview' : 'Dashboard') :
+            {activeNav === 'dashboard' ? 'Home' :
              activeNav.charAt(0).toUpperCase() + activeNav.slice(1)}
           </div>
 
