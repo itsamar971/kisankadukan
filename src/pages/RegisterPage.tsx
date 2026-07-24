@@ -357,8 +357,7 @@ export default function RegisterPage() {
         {/* ══════════ RIGHT MINIMAL GRAPHIC COLUMN ══════════ */}
         <div className="uui-auth-right">
           <div className="uui-art-wrap">
-            <div className="uui-art-shape" />
-            <div className="uui-art-shadow" />
+            <img src="/Group 2.svg" alt="KisanKaDukan illustration" className="uui-art-svg" />
           </div>
         </div>
 
