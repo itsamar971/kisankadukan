@@ -1990,15 +1990,15 @@ function SettingsView({ onNavigate }: { onNavigate: (id: string) => void }) {
     {
       label: 'More',
       items: [
-        { icon: <Shield size={17}/>,        label: 'Privacy & Security', sub: 'Password and data settings',   action: () => {}  },
-        { icon: <Phone size={17}/>,         label: 'Help & Support',     sub: 'FAQ and contact us',            action: () => {}  },
-        { icon: <Sparkles size={17}/>,      label: 'About KisanKaDukan', sub: 'Version 1.0 · Made with ❤️ for farmers', action: () => {} },
+        { icon: <Shield size={17}/>,        label: 'Privacy & Security', sub: 'Password and data settings',   action: () => onNavigate('privacy')  },
+        { icon: <Phone size={17}/>,         label: 'Help & Support',     sub: 'FAQ and contact us',            action: () => onNavigate('support')  },
+        { icon: <Sparkles size={17}/>,      label: 'About KisanKaDukan', sub: 'Version 1.0 · Made with ❤️ for farmers', action: () => onNavigate('about') },
       ],
     },
   ];
 
   return (
-    <div className="sv-page">
+    <div className="sv-page" style={{ height: '100vh', overflowY: 'auto', paddingBottom: 120 }}>
       {/* Hero */}
       <div className="sv-hero" onClick={() => onNavigate('profile')}>
         <div className="sv-avatar">{user?.fullName?.charAt(0).toUpperCase()}</div>
@@ -2040,6 +2040,72 @@ function SettingsView({ onNavigate }: { onNavigate: (id: string) => void }) {
           </button>
         </div>
       </div>
+    </div>
+  );
+}
+
+function PrivacyView({ onBack }: { onBack: () => void }) {
+  return (
+    <div className="sv-page" style={{ height: '100vh', overflowY: 'auto', paddingBottom: 120 }}>
+      <div className="dsh-page-header" style={{ padding: '0 16px' }}>
+        <button className="dsh-ghost-btn" style={{ padding: 0, marginBottom: 12, color: '#8a9a84' }} onClick={onBack}>
+          <ChevronRight size={14} style={{ transform: 'rotate(180deg)' }}/> Back to Settings
+        </button>
+        <h1 className="dsh-page-title" style={{ fontSize: 24 }}>Privacy & Security</h1>
+      </div>
+      <div className="sv-group" style={{ marginTop: 20 }}>
+        <div className="sv-group-card">
+          <div className="sv-row"><span className="sv-row-label">Change Password</span><ChevronRight size={14} style={{color:'#c7c7cc'}}/></div>
+          <div className="sv-divider"/>
+          <div className="sv-row"><span className="sv-row-label">Two-Factor Authentication</span><span className="sv-row-sub">Disabled</span></div>
+          <div className="sv-divider"/>
+          <div className="sv-row"><span className="sv-row-label">Data Sharing Preferences</span><ChevronRight size={14} style={{color:'#c7c7cc'}}/></div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function SupportView({ onBack }: { onBack: () => void }) {
+  return (
+    <div className="sv-page" style={{ height: '100vh', overflowY: 'auto', paddingBottom: 120 }}>
+      <div className="dsh-page-header" style={{ padding: '0 16px' }}>
+        <button className="dsh-ghost-btn" style={{ padding: 0, marginBottom: 12, color: '#8a9a84' }} onClick={onBack}>
+          <ChevronRight size={14} style={{ transform: 'rotate(180deg)' }}/> Back to Settings
+        </button>
+        <h1 className="dsh-page-title" style={{ fontSize: 24 }}>Help & Support</h1>
+      </div>
+      <div className="sv-group" style={{ marginTop: 20 }}>
+        <div className="sv-group-card">
+          <div className="sv-row"><div className="sv-row-icon-wrap"><Phone size={16}/></div><span className="sv-row-label">Call Support (24/7)</span></div>
+          <div className="sv-divider"/>
+          <div className="sv-row"><div className="sv-row-icon-wrap"><Mail size={16}/></div><span className="sv-row-label">Email Us</span></div>
+          <div className="sv-divider"/>
+          <div className="sv-row"><div className="sv-row-icon-wrap"><FileText size={16}/></div><span className="sv-row-label">FAQs</span></div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function AboutView({ onBack }: { onBack: () => void }) {
+  return (
+    <div className="sv-page" style={{ height: '100vh', overflowY: 'auto', paddingBottom: 120, display:'flex', flexDirection:'column', alignItems:'center', paddingTop: 60 }}>
+      <div style={{ width: 80, height: 80, background: '#166534', borderRadius: 20, display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 20 }}>
+        <Leaf size={40} color="#fff" />
+      </div>
+      <h1 style={{ fontSize: 24, fontWeight: 800, color: '#111827', margin: 0 }}>KisanKaDukan</h1>
+      <p style={{ color: '#64748b', fontSize: 14, marginTop: 8 }}>Version 1.0.4 (Build 204)</p>
+      
+      <div style={{ background: '#fff', borderRadius: 16, padding: 20, marginTop: 40, width: '90%', maxWidth: 400, textAlign: 'center', boxShadow: '0 2px 10px rgba(0,0,0,0.05)' }}>
+        <p style={{ color: '#475569', fontSize: 14, lineHeight: 1.6, margin: 0 }}>
+          Made with ❤️ to connect local farmers directly with consumers. Thank you for supporting fair trade!
+        </p>
+      </div>
+      
+      <button className="dsh-ghost-btn" style={{ marginTop: 30, color: '#166534' }} onClick={onBack}>
+        &larr; Back to Settings
+      </button>
     </div>
   );
 }
@@ -2407,6 +2473,9 @@ export default function DashboardPage() {
   const renderView = () => {
     if (activeNav === 'settings') return <SettingsView onNavigate={handleNav} />;
     if (activeNav === 'profile') return <ProfileView />;
+    if (activeNav === 'privacy') return <PrivacyView onBack={() => setActiveNav('settings')} />;
+    if (activeNav === 'support') return <SupportView onBack={() => setActiveNav('settings')} />;
+    if (activeNav === 'about') return <AboutView onBack={() => setActiveNav('settings')} />;
     if (activeNav === 'messages') return <MessagesView />;
     if (activeNav === 'notifications') return <NotificationsView />;
     if (activeNav === 'checkout') return (
