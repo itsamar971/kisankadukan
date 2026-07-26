@@ -399,7 +399,7 @@ function OrderTrackingTimeline({ status }: { status: string }) {
 
 /* Interactive SVG Revenue Curve Chart */
 function RevenueLineChart({ data }: { data: { month: string; amount: number }[] }) {
-  const [hoverIdx, setHoverIdx] = useState<number | null>(5);
+  const [hoverIdx, setHoverIdx] = useState<number | null>(null);
   const [filter, setFilter] = useState('6M');
   const max = 50000;
   const min = 10000;
@@ -472,11 +472,13 @@ function RevenueLineChart({ data }: { data: { month: string; amount: number }[] 
           <path d={pathD} fill="none" stroke="#16A34A" strokeWidth="3" strokeLinecap="round" />
 
           {points.map((p, i) => (
-            <g key={i} className="dsh-chart-node" onMouseEnter={() => setHoverIdx(i)}>
+            <g key={i} className="dsh-chart-node" onClick={() => setHoverIdx(hoverIdx === i ? null : i)} style={{ cursor: 'pointer' }}>
               <circle cx={p.x} cy={p.y} r={hoverIdx === i ? "6" : "4"} fill="#FFFFFF" stroke="#16A34A" strokeWidth="2.5" style={{ transition: 'all 0.2s' }} />
               {hoverIdx === i && (
                 <circle cx={p.x} cy={p.y} r="10" fill="#16A34A" fillOpacity="0.18" />
               )}
+              {/* Invisible larger circle to make tapping easier */}
+              <circle cx={p.x} cy={p.y} r="20" fill="transparent" />
             </g>
           ))}
         </svg>
@@ -500,7 +502,8 @@ function RevenueLineChart({ data }: { data: { month: string; amount: number }[] 
           <span
             key={p.month}
             className={`dsh-axis-label ${hoverIdx === i ? 'dsh-axis-label--active' : ''}`}
-            onMouseEnter={() => setHoverIdx(i)}
+            onClick={() => setHoverIdx(hoverIdx === i ? null : i)}
+            style={{ cursor: 'pointer' }}
           >
             {p.month}
           </span>
@@ -582,56 +585,6 @@ function FarmerDashboardView({ onNavigate }: { onNavigate?: (navId: string) => v
           {/* Interactive Revenue Line Chart */}
           <RevenueLineChart data={monthlyRevenue} />
 
-          {/* Latest Orders Table Card */}
-          <div className="dsh-saas-card">
-            <div className="dsh-saas-card-header">
-              <div>
-                <h3 className="dsh-card-title">Latest Orders</h3>
-                <p className="dsh-card-subtitle">Real-time order activity from registered buyers</p>
-              </div>
-              <button className="dsh-ghost-btn" onClick={() => onNavigate && onNavigate('orders')}>
-                View all <ChevronRight size={14} />
-              </button>
-            </div>
-            <div className="dsh-orders-table-wrap">
-              <table className="dsh-saas-table">
-                <thead>
-                  <tr>
-                    <th>Customer</th>
-                    <th>Produce Item</th>
-                    <th>Quantity</th>
-                    <th>Total Amount</th>
-                    <th>Status</th>
-                    <th>Action</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {allFarmerOrders.slice(0, 4).map(o => (
-                    <tr key={o.id}>
-                      <td>
-                        <div className="dsh-user-row-cell">
-                          <div className="dsh-avatar-circle">{o.buyer!.charAt(0)}</div>
-                          <div>
-                            <p className="dsh-cell-name">{o.buyer}</p>
-                            <p className="dsh-cell-sub">{o.id}</p>
-                          </div>
-                        </div>
-                      </td>
-                      <td className="dsh-cell-item">{o.item}</td>
-                      <td style={{ fontWeight: 600 }}>{o.qty}</td>
-                      <td className="dsh-cell-amount">{o.amount}</td>
-                      <td><StatusBadge status={o.status} /></td>
-                      <td>
-                        <button className="dsh-table-action-btn" onClick={() => onNavigate && onNavigate('orders')}>
-                          Details →
-                        </button>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </div>
 
         </div>
 
@@ -731,7 +684,6 @@ function FarmerListingsView() {
   const [showAdd, setShowAdd] = useState(false);
   const [filterStatus, setFilterStatus] = useState<string>('all');
   const [newListing, setNewListing] = useState({ name:'', qty:'', price:'', category:'Vegetables', img:'🥦' });
-  const [editId, setEditId] = useState<number | null>(null);
 
   const filtered = filterStatus === 'all' ? listings : listings.filter(l => l.status === filterStatus);
 
@@ -751,99 +703,126 @@ function FarmerListingsView() {
   ));
 
   return (
-    <div className="dsh-content">
-      <div className="dsh-page-header">
-        <div>
-          <h1 className="dsh-page-title">My Listings</h1>
-          <p className="dsh-page-sub">Manage your produce listings and inventory.</p>
-        </div>
-        <button className="dsh-cta-btn" onClick={() => setShowAdd(v => !v)}>
-          <Plus size={16} />{showAdd ? 'Cancel' : 'Add New Listing'}
+    <div className="flex flex-col font-['Outfit',sans-serif] pb-24 w-full">
+      <div className="px-6 py-6 max-w-4xl mx-auto w-full">
+        <h2 className="text-[26px] font-extrabold text-[#001f3f] tracking-tight mb-1">My Listings</h2>
+        <p className="text-[#8a9a84] text-[15px] mb-8 font-medium">Manage your produce listings and inventory.</p>
+
+        <button 
+          onClick={() => setShowAdd(v => !v)}
+          className="w-full bg-[#16a34a] text-white rounded-[16px] py-4 font-semibold text-[15px] flex items-center justify-center gap-2 hover:bg-[#15803d] transition-all active:scale-[0.98] mb-8 shadow-sm"
+        >
+          <Plus size={18} strokeWidth={2.5} /> {showAdd ? 'Cancel' : 'Add New Listing'}
         </button>
-      </div>
 
-      {/* Add listing form */}
-      {showAdd && (
-        <div className="dsh-form-card">
-          <h3 className="dsh-form-title">Add New Produce Listing</h3>
-          <div className="dsh-form-grid">
-            <div className="dsh-form-field">
-              <label className="dsh-form-label">Produce Name</label>
-              <input className="dsh-form-input" placeholder="e.g. Fresh Tomatoes"
-                value={newListing.name} onChange={e => setNewListing(p => ({...p, name: e.target.value}))} />
+        {/* Add Form */}
+        {showAdd && (
+          <div className="bg-white rounded-[24px] p-6 border border-gray-100 shadow-[0_4px_30px_rgba(0,0,0,0.03)] mb-8 animate-[kkv2FadeUp_0.3s_ease]">
+            <h3 className="text-lg font-bold text-[#001f3f] mb-5">Add New Produce</h3>
+            <div className="flex flex-col gap-5">
+              <div className="flex flex-col gap-2">
+                <label className="text-[13px] font-bold text-gray-500 uppercase tracking-wider">Produce Name</label>
+                <input className="w-full border-2 border-gray-100 rounded-xl px-4 py-3 text-sm font-medium focus:outline-none focus:border-[#16a34a] transition-colors" placeholder="e.g. Fresh Tomatoes"
+                  value={newListing.name} onChange={e => setNewListing(p => ({...p, name: e.target.value}))} />
+              </div>
+              <div className="flex flex-col gap-2">
+                <label className="text-[13px] font-bold text-gray-500 uppercase tracking-wider">Category</label>
+                <select className="w-full border-2 border-gray-100 rounded-xl px-4 py-3 text-sm font-medium focus:outline-none focus:border-[#16a34a] bg-white transition-colors" value={newListing.category}
+                  onChange={e => setNewListing(p => ({...p, category: e.target.value}))}>
+                  {['Vegetables','Fruits','Grains','Spices','Dairy'].map(c => <option key={c}>{c}</option>)}
+                </select>
+              </div>
+              <div className="flex gap-4">
+                <div className="flex flex-col gap-2 w-1/2">
+                  <label className="text-[13px] font-bold text-gray-500 uppercase tracking-wider">Quantity</label>
+                  <input className="w-full border-2 border-gray-100 rounded-xl px-4 py-3 text-sm font-medium focus:outline-none focus:border-[#16a34a] transition-colors" placeholder="e.g. 500 kg"
+                    value={newListing.qty} onChange={e => setNewListing(p => ({...p, qty: e.target.value}))} />
+                </div>
+                <div className="flex flex-col gap-2 w-1/2">
+                  <label className="text-[13px] font-bold text-gray-500 uppercase tracking-wider">Price / kg</label>
+                  <input className="w-full border-2 border-gray-100 rounded-xl px-4 py-3 text-sm font-medium focus:outline-none focus:border-[#16a34a] transition-colors" placeholder="e.g. ₹28"
+                    value={newListing.price} onChange={e => setNewListing(p => ({...p, price: e.target.value}))} />
+                </div>
+              </div>
             </div>
-            <div className="dsh-form-field">
-              <label className="dsh-form-label">Category</label>
-              <select className="dsh-form-input" value={newListing.category}
-                onChange={e => setNewListing(p => ({...p, category: e.target.value}))}>
-                {['Vegetables','Fruits','Grains','Spices','Dairy'].map(c => <option key={c}>{c}</option>)}
-              </select>
-            </div>
-            <div className="dsh-form-field">
-              <label className="dsh-form-label">Available Quantity</label>
-              <input className="dsh-form-input" placeholder="e.g. 500 kg"
-                value={newListing.qty} onChange={e => setNewListing(p => ({...p, qty: e.target.value}))} />
-            </div>
-            <div className="dsh-form-field">
-              <label className="dsh-form-label">Price per kg</label>
-              <input className="dsh-form-input" placeholder="e.g. ₹28/kg"
-                value={newListing.price} onChange={e => setNewListing(p => ({...p, price: e.target.value}))} />
-            </div>
-            <div className="dsh-form-field">
-              <label className="dsh-form-label">Emoji Icon</label>
-              <input className="dsh-form-input" placeholder="🥦" maxLength={4}
-                value={newListing.img} onChange={e => setNewListing(p => ({...p, img: e.target.value}))} />
-            </div>
-          </div>
-          <button className="dsh-cta-btn" style={{ marginTop: 16 }} onClick={handleAdd}>
-            <Plus size={15} /> Add Listing
-          </button>
-        </div>
-      )}
-
-      {/* Filter tabs */}
-      <div className="dsh-category-pills" style={{ marginBottom: 24 }}>
-        {['all','active','pending','sold'].map(s => {
-          const count = s === 'all' ? listings.length : listings.filter(l => l.status === s).length;
-          return (
-            <button key={s} className={`dsh-pill ${filterStatus === s ? 'dsh-pill--active' : ''}`} onClick={() => setFilterStatus(s)}>
-              {s.charAt(0).toUpperCase() + s.slice(1)} {count > 0 ? `(${count})` : ''}
+            <button className="w-full bg-[#001f3f] text-white rounded-xl py-3 font-semibold mt-8 hover:bg-gray-800 transition-colors" onClick={handleAdd}>
+              Save Listing
             </button>
-          );
-        })}
-      </div>
+          </div>
+        )}
 
-      <div className="dsh-card">
-        <div className="dsh-table-wrap">
-          <table className="dsh-table">
-            <thead><tr>
-              <th>Produce</th><th>Category</th><th>Quantity</th>
-              <th>Price</th><th>Added</th><th>Status</th><th>Buyers</th><th>Actions</th>
-            </tr></thead>
-            <tbody>
-              {filtered.map(l => (
-                <tr key={l.id}>
-                  <td><div className="dsh-produce-cell">
-                    <span className="dsh-produce-emoji"><ProduceIcon name={l.name} size={20} /></span><span>{l.name}</span>
-                  </div></td>
-                  <td><span className="dsh-category-tag">{l.category}</span></td>
-                  <td>{l.qty}</td>
-                  <td className="dsh-price-cell">{l.price}</td>
-                  <td style={{ fontSize: 12, color: '#8a9a84' }}>{l.addedDate}</td>
-                  <td><StatusBadge status={l.status} /></td>
-                  <td><div className="dsh-buyers-cell"><Users size={13}/>{l.buyers}</div></td>
-                  <td>
-                    <div className="dsh-action-btns">
-                      <button className="dsh-icon-btn dsh-icon-btn--green" title="Toggle status"
-                        onClick={() => toggleStatus(l.id)}><Edit2 size={14}/></button>
-                      <button className="dsh-icon-btn dsh-icon-btn--red" title="Delete"
-                        onClick={() => handleDelete(l.id)}><Trash2 size={14}/></button>
-                    </div>
-                  </td>
+        {/* Filters */}
+        <div className="flex items-center gap-3 overflow-x-auto no-scrollbar mb-8 pb-2">
+          {['all', 'active', 'pending', 'sold'].map(s => {
+            const count = s === 'all' ? listings.length : listings.filter(l => l.status === s).length;
+            const isActive = filterStatus === s;
+            return (
+              <button
+                key={s}
+                onClick={() => setFilterStatus(s)}
+                className={`whitespace-nowrap px-[22px] py-[10px] rounded-full text-[14px] font-bold transition-all border ${
+                  isActive 
+                    ? 'border-[#bbf7d0] bg-[#f0fdf4] text-[#16a34a]' 
+                    : 'border-gray-200 bg-white text-gray-500 hover:bg-gray-50'
+                }`}
+              >
+                {s.charAt(0).toUpperCase() + s.slice(1)} {count > 0 ? `(${count})` : ''}
+              </button>
+            );
+          })}
+        </div>
+
+        {/* Table / List */}
+        <div className="bg-white rounded-[24px] border border-[#f3f4f6] shadow-[0_4px_30px_rgba(0,0,0,0.02)] overflow-hidden pb-4 w-full">
+          <div className="w-full">
+            <table className="w-full text-left border-collapse table-fixed">
+              <thead>
+                <tr className="bg-[#fafafa]">
+                  <th className="pl-4 pr-1 py-3 text-[9px] sm:text-[11px] font-extrabold tracking-widest text-[#a1a1aa] uppercase w-[36%]">Produce</th>
+                  <th className="px-1 py-3 text-[9px] sm:text-[11px] font-extrabold tracking-widest text-[#a1a1aa] uppercase w-[27%]">Category</th>
+                  <th className="px-1 py-3 text-[9px] sm:text-[11px] font-extrabold tracking-widest text-[#a1a1aa] uppercase w-[15%]">Qty</th>
+                  <th className="px-1 py-3 text-[9px] sm:text-[11px] font-extrabold tracking-widest text-[#a1a1aa] uppercase w-[22%]">Status</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody>
+                {filtered.map((l, index) => (
+                  <tr key={l.id} className="group">
+                    <td className="pl-4 pr-1 py-4 align-middle">
+                      <div className="flex items-center gap-2 sm:gap-3">
+                        <div className="flex-shrink-0"><ProduceIcon name={l.name} size={18} /></div>
+                        <span className="font-semibold text-[#1f2937] text-[12px] sm:text-[14px] leading-snug break-words">
+                          {l.name}
+                        </span>
+                      </div>
+                    </td>
+                    <td className="px-1 py-4 align-middle">
+                      <span className={`inline-flex px-2 sm:px-3 py-1 sm:py-[4px] rounded-full text-[10px] sm:text-[12px] font-bold border leading-tight ${
+                        l.category === 'Vegetables' ? 'bg-[#f0fdf4] text-[#16a34a] border-[#bbf7d0]' :
+                        l.category === 'Spices' ? 'bg-[#f0fdf4] text-[#22c55e] border-[#bbf7d0]' :
+                        l.category === 'Grains' ? 'bg-[#f0fdf4] text-[#16a34a] border-[#bbf7d0]' :
+                        'bg-[#f0fdf4] text-[#16a34a] border-[#bbf7d0]'
+                      }`}>
+                        {l.category}
+                      </span>
+                    </td>
+                    <td className="px-1 py-4 align-middle">
+                      <span className="font-medium text-[#4b5563] text-[11px] sm:text-[13px] whitespace-nowrap">{l.qty}</span>
+                    </td>
+                    <td className="px-1 py-4 align-middle">
+                      <span className={`inline-flex px-2 sm:px-3 py-1 sm:py-[4px] rounded-full text-[10px] sm:text-[12px] font-bold leading-tight ${
+                        l.status === 'active' ? 'bg-[#dcfce7] text-[#15803d]' :
+                        l.status === 'sold' ? 'bg-[#f3f4f6] text-[#6b7280]' :
+                        'bg-[#fef3c7] text-[#b45309]'
+                      }`}>
+                        {l.status === 'sold' ? 'Sold' : l.status.charAt(0).toUpperCase() + l.status.slice(1)}
+                      </span>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+            <div className="mx-6 h-[4px] bg-[#d1d5db] rounded-full w-[45%] mt-3"></div>
+          </div>
         </div>
       </div>
     </div>
@@ -1066,64 +1045,105 @@ function OrdersView({ orders, role, isEmbedded }: { orders: Order[]; role: 'farm
 }
 
 function RevenueView() {
-  const max = Math.max(...monthlyRevenue.map(d => d.amount));
   const categoryData = [
     { name:'Vegetables', pct:55, color:'#16a34a' },
     { name:'Grains',     pct:28, color:'#3b82f6' },
     { name:'Spices',     pct:17, color:'#f59e0b' },
   ];
+
   return (
-    <div className="dsh-content">
-      <div className="dsh-page-header">
-        <div>
-          <h1 className="dsh-page-title">Revenue Analytics</h1>
-          <p className="dsh-page-sub">Track your earnings and growth over time.</p>
-        </div>
-      </div>
-      <div className="dsh-stats-grid">
-        <StatCard icon={<IndianRupee size={20}/>} label="This Month"    value="₹43,200" trend="+18% vs last month" trendUp />
-        <StatCard icon={<IndianRupee size={20}/>} label="Total (6 mo)" value="₹1,84,100" trend="All time high" trendUp />
-        <StatCard icon={<TrendingUp size={20}/>}  label="Avg Order Val" value="₹9,200"  trend="+5% growth" trendUp />
-        <StatCard icon={<Package size={20}/>}     label="Orders (6 mo)" value="20"      sub="Across 5 buyers" />
-      </div>
-      <div className="dsh-two-col">
-        <div className="dsh-card dsh-card--span2">
-          <div className="dsh-card-header">
-            <h2 className="dsh-card-title">Monthly Revenue</h2>
-            <span style={{ fontSize:12, color:'#8a9a84' }}>Feb – Jul 2026</span>
+    <div className="flex flex-col font-['Inter',sans-serif] pb-24 w-full bg-[#f8faf9] min-h-screen">
+      <div className="px-5 py-6 max-w-4xl mx-auto w-full">
+        <h1 className="text-[22px] font-extrabold text-[#111827] tracking-tight mb-1">Revenue Analytics</h1>
+        <p className="text-[#8a9a84] text-[13px] mb-8 font-medium">Track your earnings and growth over time.</p>
+
+        <div className="grid grid-cols-2 gap-4 mb-6">
+          {/* Card 1 */}
+          <div className="bg-white rounded-3xl border border-gray-100 p-5 shadow-[0_2px_10px_rgba(0,0,0,0.02)]">
+            <div className="flex justify-between items-start mb-3">
+              <span className="text-[#6b7280] text-[12px] font-semibold tracking-wide">This Month</span>
+              <div className="w-8 h-8 rounded-full bg-[#dcfce7] flex items-center justify-center text-[#16a34a]">
+                <IndianRupee size={16} strokeWidth={2.5}/>
+              </div>
+            </div>
+            <h3 className="text-[20px] font-extrabold text-[#111827] mb-4">₹43,200</h3>
+            <p className="text-[#16a34a] text-[11px] font-bold flex items-start gap-1 leading-[1.3]">
+              <ArrowUpRight size={12} strokeWidth={3} className="flex-shrink-0 mt-[1px]"/> <span>+18% vs last<br/>month</span>
+            </p>
           </div>
-          <div style={{ padding:'24px 28px' }}>
-            <BarChart data={monthlyRevenue} />
+          {/* Card 2 */}
+          <div className="bg-white rounded-3xl border border-gray-100 p-5 shadow-[0_2px_10px_rgba(0,0,0,0.02)]">
+            <div className="flex justify-between items-start mb-3">
+              <span className="text-[#6b7280] text-[12px] font-semibold tracking-wide">Total (6 mo)</span>
+              <div className="w-8 h-8 rounded-full bg-[#dcfce7] flex items-center justify-center text-[#16a34a]">
+                <IndianRupee size={16} strokeWidth={2.5}/>
+              </div>
+            </div>
+            <h3 className="text-[20px] font-extrabold text-[#111827] mb-4">₹1,84,100</h3>
+            <p className="text-[#16a34a] text-[11px] font-bold flex items-start gap-1 leading-[1.3] mt-[14px]">
+              <ArrowUpRight size={12} strokeWidth={3} className="flex-shrink-0 mt-[1px]"/> <span>All time high</span>
+            </p>
+          </div>
+          {/* Card 3 */}
+          <div className="bg-white rounded-3xl border border-gray-100 p-5 shadow-[0_2px_10px_rgba(0,0,0,0.02)]">
+            <div className="flex justify-between items-start mb-3">
+              <span className="text-[#6b7280] text-[12px] font-semibold tracking-wide">Avg Order Val</span>
+              <div className="w-8 h-8 rounded-full bg-[#dcfce7] flex items-center justify-center text-[#16a34a]">
+                <TrendingUp size={16} strokeWidth={2.5}/>
+              </div>
+            </div>
+            <h3 className="text-[20px] font-extrabold text-[#111827] mb-4">₹9,200</h3>
+            <p className="text-[#16a34a] text-[11px] font-bold flex items-start gap-1 leading-[1.3]">
+              <ArrowUpRight size={12} strokeWidth={3} className="flex-shrink-0 mt-[1px]"/> <span>+5% growth</span>
+            </p>
+          </div>
+          {/* Card 4 */}
+          <div className="bg-white rounded-3xl border border-gray-100 p-5 shadow-[0_2px_10px_rgba(0,0,0,0.02)]">
+            <div className="flex justify-between items-start mb-3">
+              <span className="text-[#6b7280] text-[12px] font-semibold tracking-wide">Orders (6 mo)</span>
+              <div className="w-8 h-8 rounded-full bg-[#dcfce7] flex items-center justify-center text-[#16a34a]">
+                <Package size={16} strokeWidth={2.5}/>
+              </div>
+            </div>
+            <h3 className="text-[20px] font-extrabold text-[#111827] mb-4">20</h3>
+            <p className="text-[#9ca3af] text-[11px] font-medium leading-[1.3]">
+              Across 5 buyers
+            </p>
           </div>
         </div>
-        <div className="dsh-card">
-          <div className="dsh-card-header"><h2 className="dsh-card-title">Revenue by Category</h2></div>
-          <div style={{ padding:'20px' }}>
-            {categoryData.map(c => (
-              <div key={c.name} style={{ marginBottom:16 }}>
-                <div style={{ display:'flex', justifyContent:'space-between', marginBottom:6 }}>
-                  <span style={{ fontSize:13, fontWeight:600, color:'#2a3a26' }}>{c.name}</span>
-                  <span style={{ fontSize:13, fontWeight:700, color: c.color }}>{c.pct}%</span>
-                </div>
-                <div style={{ height:8, background:'#f0ede8', borderRadius:4, overflow:'hidden' }}>
-                  <div style={{ height:'100%', width:`${c.pct}%`, background: c.color, borderRadius:4, transition:'width 0.8s ease' }} />
-                </div>
+
+        {/* Monthly Revenue Card */}
+        <div className="bg-white rounded-3xl border border-gray-100 p-6 shadow-[0_2px_10px_rgba(0,0,0,0.02)] mb-6">
+          <div className="flex justify-between items-center mb-10 border-b border-gray-50 pb-5">
+            <h2 className="text-[13px] font-extrabold text-[#111827]">Monthly Revenue</h2>
+            <span className="text-[#9ca3af] text-[11px] font-semibold">Feb – Jul 2026</span>
+          </div>
+          <div className="flex justify-between items-end px-1 pb-4">
+            {monthlyRevenue.map((d, i) => (
+              <div key={i} className="flex flex-col items-center gap-2 flex-1">
+                <span className="text-[9px] font-bold text-[#9ca3af]">₹{d.amount >= 1000 ? `${(d.amount/1000).toFixed(0)}k` : d.amount}</span>
+                <div className="w-[85%] h-1 bg-[#16a34a] rounded-full"></div>
+                <span className="text-[10px] font-semibold text-[#6b7280]">{d.month}</span>
               </div>
             ))}
           </div>
         </div>
-        <div className="dsh-card">
-          <div className="dsh-card-header"><h2 className="dsh-card-title">Top Buyers by Revenue</h2></div>
-          <div className="dsh-orders-list">
-            {connectedBuyers.slice(0,4).map((b,i) => (
-              <div key={b.id} className="dsh-order-row">
-                <span style={{ fontSize:13, fontWeight:700, color:'#b0a89f', width:20 }}>#{i+1}</span>
-                <div className="dsh-order-avatar">{b.name.charAt(0)}</div>
-                <div className="dsh-order-info">
-                  <p className="dsh-order-name">{b.name}</p>
-                  <p className="dsh-order-item">{b.orders} orders</p>
+
+        {/* Revenue by Category Card */}
+        <div className="bg-white rounded-3xl border border-gray-100 p-6 shadow-[0_2px_10px_rgba(0,0,0,0.02)] mb-6">
+          <div className="mb-8 border-b border-gray-50 pb-5">
+            <h2 className="text-[13px] font-extrabold text-[#111827]">Revenue by Category</h2>
+          </div>
+          <div className="flex flex-col gap-6">
+            {categoryData.map(c => (
+              <div key={c.name} className="flex flex-col gap-3">
+                <div className="flex justify-between items-center">
+                  <span className="text-[13px] font-semibold text-[#4b5563]">{c.name}</span>
+                  <span className="text-[12px] font-bold" style={{ color: c.color }}>{c.pct}%</span>
                 </div>
-                <p className="dsh-order-amount">{b.totalBought}</p>
+                <div className="w-full h-1.5 bg-gray-100 rounded-full overflow-hidden">
+                  <div className="h-full rounded-full transition-all duration-1000" style={{ width: `${c.pct}%`, backgroundColor: c.color }}></div>
+                </div>
               </div>
             ))}
           </div>
