@@ -1149,7 +1149,7 @@ function CircularProgress({ pct }: { pct: number }) {
   );
 }
 
-function BuyerDashboardView({ onCheckout }: { onCheckout?: (item?: any) => void }) {
+function BuyerDashboardView({ onCheckout, onProductClick }: { onCheckout?: (item?: any) => void, onProductClick?: (item: any) => void }) {
   const [btnStates, setBtnStates] = useState<Record<string, string>>({});
   const [showListingModal, setShowListingModal] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -1244,6 +1244,37 @@ function BuyerDashboardView({ onCheckout }: { onCheckout?: (item?: any) => void 
           <p className="dsh-donz-label">Processing</p>
           <h2 className="dsh-donz-value">4</h2>
           <div className="dsh-donz-sub" style={{ color:'#a0988f' }}>On Queue</div>
+        </div>
+      </div>
+
+      {/* HORIZONTAL PRODUCT LIST */}
+      <div style={{ background: '#fff', border: '1px solid #e5e7eb', borderRadius: 20, padding: '20px 24px', marginBottom: 24, boxShadow: '0 1px 3px rgba(0,0,0,0.04)' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
+          <h2 style={{ fontSize: 18, fontWeight: 700, color: '#111827', margin: 0 }}>Shop Products</h2>
+          <span style={{ fontSize:14, color:'#8a9a84', cursor:'pointer', fontWeight: 600 }}>See all &rarr;</span>
+        </div>
+        <div style={{ display: 'flex', gap: 16, overflowX: 'auto', paddingBottom: 16, paddingLeft: 4, paddingRight: 4 }}>
+          {browseProduce.map(product => (
+            <div 
+              key={product.id} 
+              onClick={() => onProductClick && onProductClick(product)}
+              style={{ minWidth: 220, border: '1px solid #ece9e3', borderRadius: 12, padding: 16, cursor: 'pointer', background: '#fff', transition: 'box-shadow 0.2s', display:'flex', flexDirection:'column', gap:8 }}
+              onMouseOver={e => e.currentTarget.style.boxShadow = '0 4px 12px rgba(0,0,0,0.05)'}
+              onMouseOut={e => e.currentTarget.style.boxShadow = 'none'}
+            >
+              <div style={{ background: '#f8faf7', borderRadius: 8, height: 120, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 40 }}>
+                <ProduceIcon name={product.name} size={40} />
+              </div>
+              <div>
+                <h3 style={{ margin: '8px 0 4px', fontSize: 16, color: '#111827' }}>{product.name}</h3>
+                <p style={{ margin: 0, fontSize: 13, color: '#8a9a84' }}>{product.farmer}</p>
+              </div>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 'auto', paddingTop: 8 }}>
+                <span style={{ fontWeight: 600, color: '#166534' }}>{product.price}</span>
+                <span style={{ fontSize: 12, display: 'flex', alignItems: 'center', gap: 2, background: '#f0fdf4', color: '#166534', padding: '2px 6px', borderRadius: 10 }}><Star size={10} fill="currentColor"/> {product.rating}</span>
+              </div>
+            </div>
+          ))}
         </div>
       </div>
 
@@ -1372,40 +1403,190 @@ function BuyerDashboardView({ onCheckout }: { onCheckout?: (item?: any) => void 
         </div>
       </div>
 
-      {showListingModal && (
-        <div className="dsh-modal-overlay" onClick={() => setShowListingModal(false)} style={{ position:'fixed', top:0, left:0, right:0, bottom:0, background:'rgba(0,0,0,0.5)', zIndex:999, display:'flex', alignItems:'center', justifyContent:'center', padding:20 }}>
-          <div className="dsh-modal" onClick={e => e.stopPropagation()} style={{ background:'#fff', borderRadius:16, width:'100%', maxWidth:400, padding:24, boxShadow:'0 10px 25px rgba(0,0,0,0.1)' }}>
-            <div style={{ display:'flex', justifyContent:'space-between', alignItems:'flex-start', marginBottom:16 }}>
+    </div>
+  );
+}
+
+function ProductDetailsView({ product, onBack, onAddToCart }: { product: any, onBack: () => void, onAddToCart: (product: any) => void }) {
+  if (!product) return null;
+  return (
+    <div className="dsh-content" style={{ maxWidth: 800, margin: '0 auto', display: 'flex', flexDirection: 'column', gap: 24 }}>
+      <div>
+        <button className="dsh-ghost-btn" style={{ padding: 0, marginBottom: 12, color: '#8a9a84' }} onClick={onBack}>
+          &larr; Back to Dashboard
+        </button>
+      </div>
+      <div style={{ background: '#fff', border: '1px solid #e5e7eb', borderRadius: 20, padding: 24, display: 'flex', flexDirection: 'column', gap: 24, flexShrink: 0 }}>
+        {/* 1. Image */}
+        <div style={{ width: '100%', height: 300, background: '#f8faf7', borderRadius: 16, display: 'flex', alignItems: 'center', justifyContent: 'center', border: '1px solid #ece9e3', flexShrink: 0 }}>
+          <ProduceIcon name={product.name} size={100} />
+        </div>
+
+        {/* Info Box */}
+        <div style={{ display: 'flex', flexDirection: 'column', flexShrink: 0 }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 8 }}>
+            <h1 style={{ fontSize: 28, margin: 0, color: '#111827', fontWeight: 700 }}>{product.name}</h1>
+            <span style={{ background: '#f0fdf4', color: '#166534', padding: '4px 8px', borderRadius: 8, fontSize: 12, fontWeight: 600 }}>{product.badge || 'Fresh'}</span>
+          </div>
+          <p style={{ margin: '0 0 16px 0', color: '#8a9a84', fontSize: 16, display: 'flex', alignItems: 'center', gap: 6 }}><Sprout size={16}/> {product.farmer} &middot; <MapPin size={14}/> {product.loc}</p>
+          
+          <div style={{ display: 'flex', gap: 16, marginBottom: 24, paddingBottom: 24, borderBottom: '1px solid #ece9e3', flexWrap: 'wrap' }}>
+            <div style={{ flex: '1 1 auto', minWidth: 100 }}>
+              <p style={{ margin: 0, fontSize: 13, color: '#8a9a84' }}>Price</p>
+              <p style={{ margin: '4px 0 0', fontSize: 24, fontWeight: 700, color: '#166534' }}>{product.price}</p>
+            </div>
+            <div style={{ flex: '1 1 auto', minWidth: 100 }}>
+              <p style={{ margin: 0, fontSize: 13, color: '#8a9a84' }}>Available Quantity</p>
+              <p style={{ margin: '4px 0 0', fontSize: 18, fontWeight: 600, color: '#111827' }}>{product.qty || '1000 kg'}</p>
+            </div>
+            <div style={{ flex: '1 1 auto', minWidth: 100 }}>
+              <p style={{ margin: 0, fontSize: 13, color: '#8a9a84' }}>Rating</p>
+              <p style={{ margin: '4px 0 0', fontSize: 18, fontWeight: 600, color: '#111827', display: 'flex', alignItems: 'center', gap: 4 }}><Star size={16} fill="#eab308" color="#eab308" /> {product.rating || '4.5'}</p>
+            </div>
+          </div>
+
+          <div style={{ marginBottom: 24 }}>
+            <h3 style={{ fontSize: 16, fontWeight: 600, margin: '0 0 8px 0' }}>Product Description</h3>
+            <p style={{ color: '#4b5563', lineHeight: 1.6, fontSize: 14 }}>
+              Freshly harvested {product.name.toLowerCase()} sourced directly from {product.farmer}'s farm in {product.loc}. 
+              Grown with sustainable farming practices, ensuring the highest quality and taste. 
+              Perfect for your daily needs and bulk orders.
+            </p>
+          </div>
+
+          <button className="dsh-cta-btn" style={{ width: '100%', padding: '16px 24px', fontSize: 16, justifyContent: 'center' }} onClick={() => onAddToCart(product)}>
+            <ShoppingCart size={18}/> Add to Cart
+          </button>
+        </div>
+      </div>
+
+      {/* RATINGS & REVIEWS */}
+      <div style={{ background: '#fff', border: '1px solid #e5e7eb', borderRadius: 20, padding: '24px', boxShadow: '0 1px 3px rgba(0,0,0,0.04)' }}>
+        <h2 style={{ fontSize: 18, fontWeight: 700, color: '#111827', margin: '0 0 16px 0' }}>Ratings & Reviews</h2>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 16, marginBottom: 24 }}>
+          <div style={{ fontSize: 40, fontWeight: 700, color: '#111827' }}>{product.rating || '4.5'}</div>
+          <div>
+            <div style={{ display: 'flex', color: '#eab308' }}><Star size={16} fill="currentColor"/><Star size={16} fill="currentColor"/><Star size={16} fill="currentColor"/><Star size={16} fill="currentColor"/><Star size={16} fill="currentColor"/></div>
+            <p style={{ margin: '4px 0 0', fontSize: 13, color: '#8a9a84' }}>Based on 128 reviews</p>
+          </div>
+        </div>
+        
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+          <div style={{ borderBottom: '1px solid #f0ede8', paddingBottom: 16 }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 4 }}>
+              <span style={{ fontWeight: 600, fontSize: 14 }}>Rahul Sharma</span>
+              <span style={{ color: '#8a9a84', fontSize: 12 }}>2 days ago</span>
+            </div>
+            <div style={{ display: 'flex', color: '#eab308', marginBottom: 8 }}><Star size={12} fill="currentColor"/><Star size={12} fill="currentColor"/><Star size={12} fill="currentColor"/><Star size={12} fill="currentColor"/><Star size={12} fill="currentColor"/></div>
+            <p style={{ margin: 0, fontSize: 14, color: '#4b5563' }}>Excellent quality and very fresh. Will definitely order again in bulk for my store.</p>
+          </div>
+          <div>
+            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 4 }}>
+              <span style={{ fontWeight: 600, fontSize: 14 }}>Priya Patel</span>
+              <span style={{ color: '#8a9a84', fontSize: 12 }}>1 week ago</span>
+            </div>
+            <div style={{ display: 'flex', color: '#eab308', marginBottom: 8 }}><Star size={12} fill="currentColor"/><Star size={12} fill="currentColor"/><Star size={12} fill="currentColor"/><Star size={12} fill="currentColor"/></div>
+            <p style={{ margin: 0, fontSize: 14, color: '#4b5563' }}>Good produce, delivery was a bit late but the items were perfectly fine.</p>
+          </div>
+        </div>
+      </div>
+
+      {/* SUGGESTED PRODUCTS */}
+      <div style={{ background: '#fff', border: '1px solid #e5e7eb', borderRadius: 20, padding: '20px 24px', boxShadow: '0 1px 3px rgba(0,0,0,0.04)' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
+          <h2 style={{ fontSize: 18, fontWeight: 700, color: '#111827', margin: 0 }}>Suggested Products</h2>
+        </div>
+        <div style={{ display: 'flex', gap: 16, overflowX: 'auto', paddingBottom: 16, paddingLeft: 4, paddingRight: 4 }}>
+          {browseProduce.filter((p: any) => p.id !== product.id).slice(0, 4).map((p: any) => (
+            <div 
+              key={p.id} 
+              style={{ minWidth: 200, border: '1px solid #ece9e3', borderRadius: 12, padding: 16, background: '#fff', display:'flex', flexDirection:'column', gap:8 }}
+            >
+              <div style={{ background: '#f8faf7', borderRadius: 8, height: 100, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 32 }}>
+                <ProduceIcon name={p.name} size={32} />
+              </div>
               <div>
-                <h3 style={{ margin:'0 0 4px 0', fontSize:18, color:'#111827' }}>{reminder.title}</h3>
-                <p style={{ margin:0, fontSize:13, color:'#8a9a84' }}><Sprout size={12} style={{ display:'inline', marginRight:4 }}/> Ramesh Patel · Nashik, MH</p>
+                <h3 style={{ margin: '8px 0 4px', fontSize: 14, color: '#111827', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{p.name}</h3>
+                <p style={{ margin: 0, fontSize: 12, color: '#8a9a84' }}>{p.farmer}</p>
               </div>
-              <div style={{ background:'#f0fdf4', color:'#166534', padding:'4px 8px', borderRadius:8, fontSize:12, fontWeight:600 }}>Available</div>
-            </div>
-            <div style={{ background:'#f8faf7', borderRadius:8, padding:16, marginBottom:20 }}>
-              <p style={{ margin:'0 0 12px 0', fontSize:14, color:'#4b5563', lineHeight:1.5 }}>{reminder.detail}</p>
-              <div style={{ display:'flex', justifyContent:'space-between', borderTop:'1px solid #ece9e3', paddingTop:12 }}>
-                <div>
-                  <span style={{ fontSize:11, color:'#8a9a84', display:'block' }}>Price</span>
-                  <span style={{ fontSize:14, fontWeight:600, color:'#111827' }}>₹40 / kg</span>
-                </div>
-                <div>
-                  <span style={{ fontSize:11, color:'#8a9a84', display:'block' }}>Minimum Order</span>
-                  <span style={{ fontSize:14, fontWeight:600, color:'#111827' }}>50 kg</span>
-                </div>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 'auto', paddingTop: 8 }}>
+                <span style={{ fontWeight: 600, color: '#166534', fontSize: 14 }}>{p.price}</span>
+                <span style={{ fontSize: 11, display: 'flex', alignItems: 'center', gap: 2, background: '#f0fdf4', color: '#166534', padding: '2px 6px', borderRadius: 10 }}><Star size={10} fill="currentColor"/> {p.rating}</span>
               </div>
             </div>
-            <div style={{ display:'flex', gap:10 }}>
-              <button className="dsh-ghost-btn" style={{ flex:1 }} onClick={() => setShowListingModal(false)}>Close</button>
-              <button className="dsh-cta-btn" style={{ flex:1 }} onClick={() => {
-                setShowListingModal(false);
-                if (onCheckout) onCheckout({ name: 'Tomatoes', farmer: 'Ramesh Patel', price: '₹40/kg' });
-              }}>Order Now</button>
+          ))}
+        </div>
+      </div>
+
+    </div>
+  );
+}
+
+function CartView({ cart, onCheckout, onBack }: { cart: any[], onCheckout: () => void, onBack: () => void }) {
+  const totalItems = cart.length;
+  const totalPrice = cart.reduce((acc, item) => {
+    const priceStr = item.price.replace(/[^0-9]/g, '');
+    return acc + (parseInt(priceStr, 10) || 0) * 50;
+  }, 0);
+
+  return (
+    <div className="dsh-content" style={{ maxWidth: 800, margin: '0 auto' }}>
+      <div className="dsh-page-header">
+        <div>
+          <button className="dsh-ghost-btn" style={{ padding: 0, marginBottom: 12, color: '#8a9a84' }} onClick={onBack}>
+            &larr; Continue Shopping
+          </button>
+          <h1 className="dsh-page-title">Your Cart</h1>
+          <p className="dsh-page-sub">Review your items before proceeding to checkout.</p>
+        </div>
+      </div>
+      
+      {cart.length === 0 ? (
+        <div className="dsh-card" style={{ padding: 40, textAlign: 'center', color: '#8a9a84' }}>
+          <ShoppingCart size={48} style={{ margin: '0 auto 16px', opacity: 0.5 }} />
+          <h3>Your cart is empty</h3>
+          <p>Browse products and add them to your cart.</p>
+        </div>
+      ) : (
+        <div style={{ display: 'flex', gap: 24, alignItems: 'flex-start', flexWrap: 'wrap' }}>
+          <div style={{ flex: '2 1 300px', display: 'flex', flexDirection: 'column', gap: 16 }}>
+            {cart.map((item, idx) => (
+              <div key={idx} className="dsh-card" style={{ padding: 16, display: 'flex', gap: 16, alignItems: 'center' }}>
+                <div style={{ width: 64, height: 64, background: '#f8faf7', borderRadius: 8, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                  <ProduceIcon name={item.name} size={32} />
+                </div>
+                <div style={{ flex: 1 }}>
+                  <h4 style={{ margin: '0 0 4px', fontSize: 16 }}>{item.name}</h4>
+                  <p style={{ margin: 0, fontSize: 13, color: '#8a9a84' }}>Sold by {item.farmer}</p>
+                </div>
+                <div style={{ textAlign: 'right' }}>
+                  <p style={{ margin: '0 0 4px', fontSize: 16, fontWeight: 600 }}>{item.price}</p>
+                  <p style={{ margin: 0, fontSize: 12, color: '#8a9a84' }}>Qty: 50 kg</p>
+                </div>
+              </div>
+            ))}
+          </div>
+          
+          <div className="dsh-card" style={{ flex: '1 1 250px', padding: 24 }}>
+            <h3 style={{ margin: '0 0 16px', fontSize: 18 }}>Order Summary</h3>
+            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 12, fontSize: 14, color: '#4b5563' }}>
+              <span>Items ({totalItems})</span>
+              <span>₹{totalPrice.toLocaleString()}</span>
             </div>
+            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 16, fontSize: 14, color: '#4b5563' }}>
+              <span>Delivery</span>
+              <span style={{ color: '#166534' }}>Free</span>
+            </div>
+            <div style={{ display: 'flex', justifyContent: 'space-between', paddingTop: 16, borderTop: '1px solid #ece9e3', marginBottom: 24, fontSize: 18, fontWeight: 700 }}>
+              <span>Total</span>
+              <span>₹{totalPrice.toLocaleString()}</span>
+            </div>
+            <button className="dsh-cta-btn" style={{ width: '100%', justifyContent: 'center' }} onClick={onCheckout}>
+              Proceed to Checkout
+            </button>
           </div>
         </div>
       )}
-
     </div>
   );
 }
@@ -2023,6 +2204,8 @@ export default function DashboardPage() {
   const [activeNav, setActiveNav] = useState('dashboard');
   const [showRadarModal, setShowRadarModal] = useState(false);
   const [checkoutItem, setCheckoutItem] = useState<any>(null);
+  const [cart, setCart] = useState<any[]>([]);
+  const [selectedProduct, setSelectedProduct] = useState<any>(null);
   
   const [globalSearch, setGlobalSearch] = useState('');
   const [searchFocused, setSearchFocused] = useState(false);
@@ -2080,6 +2263,8 @@ export default function DashboardPage() {
     if (activeNav === 'notifications') return <NotificationsView />;
     if (activeNav === 'checkout') return <CheckoutView item={checkoutItem} onConfirm={() => setActiveNav('order_success')} onCancel={() => setActiveNav('browse')} />;
     if (activeNav === 'order_success') return <OrderSuccessView onTrackOrder={() => setActiveNav('orders')} />;
+    if (activeNav === 'product_details') return <ProductDetailsView product={selectedProduct} onBack={() => setActiveNav('dashboard')} onAddToCart={(prod) => { setCart([...cart, prod]); setActiveNav('cart'); }} />;
+    if (activeNav === 'cart') return <CartView cart={cart} onCheckout={() => setActiveNav('checkout')} onBack={() => setActiveNav('dashboard')} />;
     if (isFarmer) {
       switch (activeNav) {
         case 'dashboard': return <FarmerDashboardView onNavigate={handleNav} />;
@@ -2091,12 +2276,12 @@ export default function DashboardPage() {
       }
     } else {
       switch (activeNav) {
-        case 'dashboard': return <BuyerDashboardView onCheckout={(item) => { setCheckoutItem(item); setActiveNav('checkout'); }} />;
+        case 'dashboard': return <BuyerDashboardView onCheckout={(item) => { setCheckoutItem(item); setActiveNav('checkout'); }} onProductClick={(item) => { setSelectedProduct(item); setActiveNav('product_details'); }} />;
         case 'orders':    return <OrdersView orders={allBuyerOrders} role="buyer" />;
         case 'browse':    return <BrowseView onCheckout={(item) => { setCheckoutItem(item); setActiveNav('checkout'); }} />;
         case 'farmers':   return <FarmersView />;
         case 'spending':  return <SpendingView />;
-        default:          return <BuyerDashboardView onCheckout={(item) => { setCheckoutItem(item); setActiveNav('checkout'); }} />;
+        default:          return <BuyerDashboardView onCheckout={(item) => { setCheckoutItem(item); setActiveNav('checkout'); }} onProductClick={(item) => { setSelectedProduct(item); setActiveNav('product_details'); }} />;
       }
     }
   };
@@ -2176,14 +2361,14 @@ export default function DashboardPage() {
             <p className="dsh-topbar-eyebrow">Good Evening 👋</p>
             <h1 className="dsh-topbar-title">
               {activeNav === 'dashboard' ? (isFarmer ? 'Farm Overview' : 'Buyer Dashboard') :
-               activeNav.charAt(0).toUpperCase() + activeNav.slice(1)}
+               activeNav.charAt(0).toUpperCase() + activeNav.slice(1).replace('_', ' ')}
             </h1>
           </div>
 
           {/* Mobile-only centered title */}
           <div className="dsh-topbar-mobile-title">
             {activeNav === 'dashboard' ? 'Home' :
-             activeNav.charAt(0).toUpperCase() + activeNav.slice(1)}
+             activeNav.charAt(0).toUpperCase() + activeNav.slice(1).replace('_', ' ')}
           </div>
 
           <div className="dsh-topbar-right">
