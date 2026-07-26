@@ -3149,8 +3149,8 @@ html {
   display: flex;
   align-items: center;
   gap: 8px;
-  padding: 8px 16px;
-  border-radius: 9px;
+  padding: 6px 16px;
+  border-radius: 9999px;
   background: transparent;
   border: none;
   font-size: 13px;
@@ -4054,7 +4054,7 @@ html {
 }
 
 .dsh-bottom-nav-btn--active .dsh-bottom-nav-icon {
-  background: #dcfce7;
+  background: transparent;
   color: #16a34a;
 }
 
@@ -4881,9 +4881,9 @@ html {
   }
   .dsh-tab {
     font-size: 11.5px !important;
-    padding: 8px 16px !important;
+    padding: 6px 16px !important;
     background: #f5f2ee !important;
-    border-radius: 20px !important;
+    border-radius: 9999px !important;
   }
   .dsh-tab--active {
     background: #fff !important;
@@ -5045,15 +5045,7 @@ html {
 }
 
 
-/* ── Capsule Tab Fix ── */
-.dsh-tab { border-radius: 9999px !important; outline: none !important; -webkit-tap-highlight-color: transparent; }
-.dsh-tab:focus { outline: none !important; }
 
-
-/* ── Perfect Capsule Aesthetic ── */
-.dsh-tab { border-radius: 9999px !important; outline: none !important; -webkit-tap-highlight-color: transparent; border: 1px solid transparent !important; }
-.dsh-tab:focus { outline: none !important; }
-.dsh-tab--active { background: #fff !important; border: 1px solid #1a2a18 !important; box-shadow: none !important; }
 
 
 /* ── Mobile Produce Grid Fix ── */

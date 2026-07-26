@@ -305,25 +305,92 @@ function BarChart({ data, color = '#16a34a' }: { data: { month: string; amount: 
 }
 
 function OrderTrackingTimeline({ status }: { status: string }) {
-  const steps = ['Processing', 'Confirmed', 'Dispatched', 'Delivered'];
-  const idx = status === 'cancelled' ? -1 : ['processing', 'processing', 'dispatched', 'delivered'].indexOf(status);
-  const activeStep = idx === -1 ? -1 : idx === 0 ? 0 : idx === 2 ? 2 : 3;
+  const baseDate = new Date();
+  const formatD = (d: Date) => d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+  const formatT = (d: Date) => d.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
+  
+  const deliveryStart = new Date(baseDate);
+  deliveryStart.setDate(baseDate.getDate() + 5);
+  const deliveryEnd = new Date(baseDate);
+  deliveryEnd.setDate(baseDate.getDate() + 7);
+  
+  const placedDateStr = `${formatD(baseDate)}, ${formatT(baseDate)}`;
+  const estDeliveryStr = `Est. ${formatD(deliveryStart)} - ${formatD(deliveryEnd)}`;
+
+  const steps = [
+    { id: 'processing', label: 'Order Placed', sub: 'Your order has been securely placed.', icon: <CheckCircle2 size={18}/>, date: placedDateStr },
+    { id: 'confirmed', label: 'Order Confirmed', sub: 'Farmer has confirmed the availability and quality.', icon: <Package size={18}/>, date: '' },
+    { id: 'dispatched', label: 'Dispatched', sub: 'Order picked up by our logistics partner.', icon: <Truck size={18}/>, date: '' },
+    { id: 'delivered', label: 'Delivered', sub: 'Order has been successfully delivered.', icon: <Home size={18}/>, date: estDeliveryStr }
+  ];
+  const idx = status === 'cancelled' ? -1 : ['processing', 'confirmed', 'dispatched', 'delivered'].indexOf(status);
+  const activeStep = idx === -1 ? -1 : (idx === 0 ? 0 : (status === 'dispatched' ? 2 : (status === 'delivered' ? 3 : 1)));
+  
   if (status === 'cancelled') {
-    return <div className="dsh-tracking"><p style={{ color: '#dc2626', fontSize: 13, margin: 0 }}>This order was cancelled.</p></div>;
+    return (
+      <div style={{ padding: 24, background: '#fef2f2', borderRadius: 16, border: '1px solid #fecaca' }}>
+        <p style={{ color: '#dc2626', fontSize: 15, margin: 0, fontWeight: 600, display: 'flex', alignItems: 'center', gap: 8 }}>
+          <AlertCircle size={20} /> This order was cancelled.
+        </p>
+      </div>
+    );
   }
+
   return (
-    <div className="dsh-tracking">
-      {steps.map((s, i) => (
-        <div key={s} className="dsh-tracking-step">
-          <div className={`dsh-tracking-dot ${i <= activeStep ? 'dsh-tracking-dot--done' : ''}`}>
-            {i <= activeStep ? <CheckCircle2 size={14} /> : <div className="dsh-tracking-dot-inner" />}
+    <div style={{ display: 'flex', flexDirection: 'column', padding: '16px 0' }}>
+      {steps.map((step, i) => {
+        const isDone = i <= activeStep;
+        const isCurrent = i === activeStep;
+        return (
+          <div 
+            key={step.id} 
+            style={{ 
+              display: 'flex', 
+              gap: 20, 
+              opacity: 0, 
+              animation: 'kkv2FadeUp 0.5s cubic-bezier(0.16,1,0.3,1) forwards', 
+              animationDelay: `${i * 0.15}s`,
+              position: 'relative'
+            }}
+          >
+            {/* Timeline Line */}
+            {i < steps.length - 1 && (
+              <div style={{ 
+                position: 'absolute', left: 19, top: 40, bottom: -12, width: 2, 
+                background: i < activeStep ? '#16a34a' : '#e2e8f0',
+                transition: 'background 0.5s ease',
+                zIndex: 0
+              }} />
+            )}
+            
+            {/* Timeline Node */}
+            <div style={{ 
+              width: 40, height: 40, borderRadius: '50%', flexShrink: 0, 
+              background: isCurrent ? '#dcfce7' : (isDone ? '#16a34a' : '#f8fafc'), 
+              border: `2px solid ${isCurrent ? '#16a34a' : (isDone ? '#16a34a' : '#e2e8f0')}`,
+              display: 'flex', alignItems: 'center', justifyContent: 'center', 
+              color: isCurrent ? '#16a34a' : (isDone ? '#fff' : '#94a3b8'),
+              zIndex: 1,
+              transition: 'all 0.4s ease'
+            }}>
+              {step.icon}
+            </div>
+            
+            {/* Content */}
+            <div style={{ flex: 1, paddingBottom: 32, paddingTop: 6 }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 6 }}>
+                <h4 style={{ margin: 0, fontSize: 16, fontWeight: 700, color: isDone ? '#1e293b' : '#64748b' }}>
+                  {step.label}
+                </h4>
+                {isDone && <span style={{ fontSize: 12, color: '#94a3b8', fontWeight: 500 }}>{step.date}</span>}
+              </div>
+              <p style={{ margin: 0, fontSize: 14, color: isDone ? '#475569' : '#94a3b8', lineHeight: 1.5 }}>
+                {step.sub}
+              </p>
+            </div>
           </div>
-          {i < steps.length - 1 && (
-            <div className={`dsh-tracking-line ${i < activeStep ? 'dsh-tracking-line--done' : ''}`} />
-          )}
-          <span className={`dsh-tracking-label ${i <= activeStep ? 'dsh-tracking-label--done' : ''}`}>{s}</span>
-        </div>
-      ))}
+        );
+      })}
     </div>
   );
 }
@@ -735,16 +802,15 @@ function FarmerListingsView() {
       )}
 
       {/* Filter tabs */}
-      <div className="dsh-tab-bar">
-        {['all','active','pending','sold'].map(s => (
-          <button key={s} className={`dsh-tab ${filterStatus === s ? 'dsh-tab--active' : ''}`}
-            onClick={() => setFilterStatus(s)}>
-            {s.charAt(0).toUpperCase() + s.slice(1)}
-            <span className="dsh-tab-count">
-              {s === 'all' ? listings.length : listings.filter(l => l.status === s).length}
-            </span>
-          </button>
-        ))}
+      <div className="dsh-category-pills" style={{ marginBottom: 24 }}>
+        {['all','active','pending','sold'].map(s => {
+          const count = s === 'all' ? listings.length : listings.filter(l => l.status === s).length;
+          return (
+            <button key={s} className={`dsh-pill ${filterStatus === s ? 'dsh-pill--active' : ''}`} onClick={() => setFilterStatus(s)}>
+              {s.charAt(0).toUpperCase() + s.slice(1)} {count > 0 ? `(${count})` : ''}
+            </button>
+          );
+        })}
       </div>
 
       <div className="dsh-card">
@@ -786,53 +852,91 @@ function FarmerListingsView() {
 
 function TrackingView({ order, role, onBack }: { order: any; role: 'farmer'|'buyer'; onBack: () => void }) {
   return (
-    <div className="dsh-content">
+    <div className="dsh-content" style={{ maxWidth: 900, margin: '0 auto', overflowX: 'hidden' }}>
       <div className="dsh-page-header">
          <div>
-           <p className="dsh-page-eyebrow" onClick={onBack} style={{cursor:'pointer', color:'#166534', display:'flex', alignItems:'center', gap:4}}>
-             <ChevronRight size={12} style={{ transform: 'rotate(180deg)' }}/> Back to Orders
+           <p className="dsh-page-eyebrow" onClick={onBack} style={{cursor:'pointer', color:'#166534', display:'flex', alignItems:'center', gap:4, marginBottom: 12}}>
+             <ChevronRight size={14} style={{ transform: 'rotate(180deg)' }}/> Back to Orders
            </p>
-           <h1 className="dsh-page-title">Order Tracking</h1>
-           <p className="dsh-page-sub">Order {order.id}</p>
+           <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
+             <h1 className="dsh-page-title" style={{ margin: 0 }}>Track Order</h1>
+             <span className="dsh-pill dsh-pill--active" style={{ pointerEvents: 'none' }}>{order.id}</span>
+           </div>
+           <p className="dsh-page-sub" style={{ marginTop: 8 }}>Real-time updates for your order.</p>
          </div>
       </div>
-      <div className="dsh-card" style={{ padding: '24px 32px' }}>
-        <div style={{ display:'flex', gap:32, alignItems:'flex-start', flexWrap:'wrap' }}>
-          <div style={{ flex:1 }}>
-            <p style={{ fontSize:12, fontWeight:700, color:'#8a9a84', textTransform:'uppercase', letterSpacing:'0.5px', margin:'0 0 20px' }}>
-              Timeline
-            </p>
-            <OrderTrackingTimeline status={order.status} />
-          </div>
-          <div style={{ minWidth:200, padding:'24px', background:'#f8faf7', borderRadius:12 }}>
-            <p style={{ fontSize:12, fontWeight:700, color:'#8a9a84', textTransform:'uppercase', letterSpacing:'0.5px', margin:'0 0 16px' }}>
-              Order Details
-            </p>
-            <div style={{ fontSize:14, display:'flex', flexDirection:'column', gap:10 }}>
-              <div style={{ display:'flex', justifyContent:'space-between' }}><span style={{ color:'#8a9a84' }}>Item</span> <strong>{order.item}</strong></div>
-              <div style={{ display:'flex', justifyContent:'space-between' }}><span style={{ color:'#8a9a84' }}>Unit Price</span> <strong>{order.unitPrice}</strong></div>
-              <div style={{ display:'flex', justifyContent:'space-between' }}><span style={{ color:'#8a9a84' }}>Quantity</span> <strong>{order.qty}</strong></div>
-              <div style={{ height:1, background:'#ece9e3', margin:'4px 0' }}></div>
-              <div style={{ display:'flex', justifyContent:'space-between', fontSize:16 }}><span style={{ color:'#8a9a84' }}>Total</span> <strong style={{ color:'#166534' }}>{order.amount}</strong></div>
+
+      <div style={{ display:'flex', gap:32, alignItems:'flex-start', flexWrap:'wrap', marginTop: 24 }}>
+        
+        {/* Animated Timeline */}
+        <div style={{ flex: 1, minWidth: 320, background: '#fff', borderRadius: 24, padding: '32px 24px', boxShadow: '0 4px 20px rgba(0,0,0,0.03)', border: '1px solid #f1f5f9', opacity: 0, animation: 'kkv2FadeUp 0.5s ease forwards' }}>
+          <OrderTrackingTimeline status={order.status} />
+        </div>
+
+        {/* Order Details Panel */}
+        <div style={{ width: '100%', maxWidth: 360, display: 'flex', flexDirection: 'column', gap: 24 }}>
+          
+          <div style={{ background: '#f8fafc', borderRadius: 20, padding: 24, border: '1px solid #e2e8f0', opacity: 0, animation: 'kkv2FadeUp 0.5s ease forwards 0.2s' }}>
+            <h3 style={{ fontSize: 16, fontWeight: 700, color: '#1e293b', margin: '0 0 20px', display: 'flex', alignItems: 'center', gap: 8 }}>
+              <Package size={18} color="#166534" /> Order Summary
+            </h3>
+            <div style={{ display:'flex', flexDirection:'column', gap:16, fontSize: 14 }}>
+              <div style={{ display:'flex', justifyContent:'space-between', alignItems: 'center' }}>
+                <span style={{ color:'#64748b' }}>Item</span> 
+                <strong style={{ color: '#0f172a' }}>{order.item}</strong>
+              </div>
+              <div style={{ display:'flex', justifyContent:'space-between', alignItems: 'center' }}>
+                <span style={{ color:'#64748b' }}>Unit Price</span> 
+                <strong style={{ color: '#0f172a' }}>{order.unitPrice || '—'}</strong>
+              </div>
+              <div style={{ display:'flex', justifyContent:'space-between', alignItems: 'center' }}>
+                <span style={{ color:'#64748b' }}>Quantity</span> 
+                <strong style={{ color: '#0f172a' }}>{order.qty}</strong>
+              </div>
+              
+              <div style={{ height:1, background:'#e2e8f0', margin:'4px 0' }}></div>
+              
+              <div style={{ display:'flex', justifyContent:'space-between', alignItems: 'center', fontSize: 18 }}>
+                <span style={{ color:'#64748b', fontWeight: 500 }}>Total</span> 
+                <strong style={{ color:'#166534', fontWeight: 800 }}>{order.amount}</strong>
+              </div>
             </div>
           </div>
+
+          <div style={{ background: '#f8fafc', borderRadius: 20, padding: 24, border: '1px solid #e2e8f0', opacity: 0, animation: 'kkv2FadeUp 0.5s ease forwards 0.3s' }}>
+            <h3 style={{ fontSize: 16, fontWeight: 700, color: '#1e293b', margin: '0 0 20px', display: 'flex', alignItems: 'center', gap: 8 }}>
+              <MapPin size={18} color="#166534" /> Shipping Info
+            </h3>
+            <div style={{ fontSize: 14, color: '#475569', lineHeight: 1.6 }}>
+              <strong>KisanKadu Logistics Hub</strong><br />
+              Plot 45, Phase 2, Industrial Area<br />
+              Maharashtra, 411057<br />
+              <div style={{ marginTop: 12, display: 'flex', gap: 12 }}>
+                <button className="dsh-ghost-btn" style={{ padding: '8px 12px', fontSize: 13, background: '#fff', border: '1px solid #e2e8f0' }}>
+                  <Phone size={14} /> Call Driver
+                </button>
+              </div>
+            </div>
+          </div>
+
           {role === 'buyer' && order.status === 'delivered' && (
-            <button className="dsh-ghost-btn dsh-ghost-btn--border" style={{ marginTop: 24 }}>
-              <Download size={13}/> Download Invoice
+            <button className="dsh-cta-btn" style={{ width: '100%', padding: '14px', borderRadius: 16, opacity: 0, animation: 'kkv2FadeUp 0.5s ease forwards 0.4s' }}>
+              <Download size={16}/> Download Full Invoice
             </button>
           )}
           {role === 'farmer' && order.status === 'processing' && (
-            <button className="dsh-cta-btn" style={{ marginTop: 24, fontSize:13, padding:'9px 16px' }}>
-              <Truck size={14}/> Mark as Dispatched
+            <button className="dsh-cta-btn" style={{ width: '100%', padding: '14px', borderRadius: 16, opacity: 0, animation: 'kkv2FadeUp 0.5s ease forwards 0.4s' }}>
+              <Truck size={16}/> Mark as Dispatched
             </button>
           )}
         </div>
+
       </div>
     </div>
   );
 }
 
-function OrdersView({ orders, role }: { orders: Order[]; role: 'farmer' | 'buyer' }) {
+function OrdersView({ orders, role, isEmbedded }: { orders: Order[]; role: 'farmer' | 'buyer', isEmbedded?: boolean }) {
   const [filter, setFilter] = useState('all');
   const [trackingOrder, setTrackingOrder] = useState<any>(null);
   const [exportState, setExportState] = useState<'idle'|'loading'|'done'>('idle');
@@ -845,37 +949,23 @@ function OrdersView({ orders, role }: { orders: Order[]; role: 'farmer' | 'buyer
   const filtered = filter === 'all' ? orders : orders.filter(o => o.status === filter);
 
   return (
-    <div className="dsh-content">
+    <div className={isEmbedded ? "" : "dsh-content"} style={{ width: '100%' }}>
       <div className="dsh-page-header">
         <div>
           <h1 className="dsh-page-title">{role === 'buyer' ? 'My Orders' : 'Received Orders'}</h1>
           <p className="dsh-page-sub">{role === 'buyer' ? 'Track your purchases from verified farmers.' : 'Manage all orders from buyers.'}</p>
         </div>
-        <button 
-          className="dsh-ghost-btn dsh-ghost-btn--border" 
-          onClick={() => {
-            setExportState('loading');
-            setTimeout(() => {
-              setExportState('done');
-              setTimeout(() => setExportState('idle'), 2000);
-            }, 1000);
-          }}
-        >
-          {exportState === 'idle' ? <><Download size={14}/> Export CSV</> : 
-           exportState === 'loading' ? 'Exporting...' : 'Exported!'}
-        </button>
       </div>
 
-      <div className="dsh-tab-bar">
-        {tabs.map(t => (
-          <button key={t} className={`dsh-tab ${filter === t ? 'dsh-tab--active' : ''}`}
-            onClick={() => setFilter(t)}>
-            {t.charAt(0).toUpperCase() + t.slice(1)}
-            <span className="dsh-tab-count">
-              {t === 'all' ? orders.length : orders.filter(o => o.status === t).length}
-            </span>
-          </button>
-        ))}
+      <div className="dsh-category-pills" style={{ marginBottom: 24 }}>
+        {tabs.map(t => {
+          const count = t === 'all' ? orders.length : orders.filter(o => o.status === t).length;
+          return (
+            <button key={t} className={`dsh-pill ${filter === t ? 'dsh-pill--active' : ''}`} onClick={() => setFilter(t)}>
+              {t.charAt(0).toUpperCase() + t.slice(1)} {count > 0 ? `(${count})` : ''}
+            </button>
+          );
+        })}
       </div>
 
       <div className="dsh-card">
@@ -1149,7 +1239,7 @@ function CircularProgress({ pct }: { pct: number }) {
   );
 }
 
-function BuyerDashboardView({ onCheckout, onProductClick }: { onCheckout?: (item?: any) => void, onProductClick?: (item: any) => void }) {
+function BuyerDashboardView({ onCheckout, onProductClick, onBrowse }: { onCheckout?: (item?: any) => void, onProductClick?: (item: any) => void, onBrowse?: () => void }) {
   const [btnStates, setBtnStates] = useState<Record<string, string>>({});
   const [showListingModal, setShowListingModal] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -1207,7 +1297,7 @@ function BuyerDashboardView({ onCheckout, onProductClick }: { onCheckout?: (item
 
       {/* ── Header ── */}
       <div style={{ display:'flex', justifyContent:'center', padding:'16px 0 8px', gap:12 }}>
-        <button className="dsh-cta-btn" style={{ flex:1, maxWidth:160, justifyContent:'center' }} onClick={() => onCheckout && onCheckout()}>
+        <button className="dsh-cta-btn" style={{ flex:1, maxWidth:160, justifyContent:'center' }} onClick={() => onBrowse && onBrowse()}>
           <Plus size={15}/> Place Order
         </button>
         <input type="file" ref={fileInputRef} onChange={handleFileChange} style={{ display: 'none' }} accept=".csv, .xlsx, .json" />
@@ -1230,14 +1320,14 @@ function BuyerDashboardView({ onCheckout, onProductClick }: { onCheckout?: (item
           <p className="dsh-donz-label">Delivered Orders</p>
           <h2 className="dsh-donz-value">10</h2>
           <div className="dsh-donz-sub dsh-donz-sub--up">
-            <ArrowUpRight size={13}/> Increased from last month
+            <ArrowUpRight size={13}/> Increased
           </div>
         </div>
         <div className="dsh-donz-stat">
           <p className="dsh-donz-label">In Transit</p>
           <h2 className="dsh-donz-value">12</h2>
           <div className="dsh-donz-sub dsh-donz-sub--up">
-            <ArrowUpRight size={13}/> Increased this month
+            <ArrowUpRight size={13}/> Increased
           </div>
         </div>
         <div className="dsh-donz-stat">
@@ -1407,7 +1497,8 @@ function BuyerDashboardView({ onCheckout, onProductClick }: { onCheckout?: (item
   );
 }
 
-function ProductDetailsView({ product, onBack, onAddToCart }: { product: any, onBack: () => void, onAddToCart: (product: any) => void }) {
+function ProductDetailsView({ product, onBack, onAddToCart, onRemoveFromCart, cart }: { product: any, onBack: () => void, onAddToCart: (product: any) => void, onRemoveFromCart?: (product: any) => void, cart?: any[] }) {
+  const qty = cart?.filter(c => c.id === product.id).length || 0;
   if (!product) return null;
   return (
     <div className="dsh-content" style={{ maxWidth: 800, margin: '0 auto', display: 'flex', flexDirection: 'column', gap: 24 }}>
@@ -1454,9 +1545,17 @@ function ProductDetailsView({ product, onBack, onAddToCart }: { product: any, on
             </p>
           </div>
 
-          <button className="dsh-cta-btn" style={{ width: '100%', padding: '16px 24px', fontSize: 16, justifyContent: 'center' }} onClick={() => onAddToCart(product)}>
-            <ShoppingCart size={18}/> Add to Cart
-          </button>
+          {qty > 0 ? (
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: '#fff', border: '1px solid #e5e7eb', borderRadius: 12, padding: '6px', width: '100%' }}>
+              <button onClick={() => onRemoveFromCart && onRemoveFromCart(product)} style={{ background:'#f9fafb', border:'1px solid #f3f4f6', borderRadius: 10, color:'#111827', cursor:'pointer', fontSize:24, fontWeight:400, width: 48, height: 48, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>-</button>
+              <span style={{ fontWeight: 600, color:'#111827', fontSize:18 }}>{qty}</span>
+              <button onClick={() => onAddToCart(product)} style={{ background:'#f9fafb', border:'1px solid #f3f4f6', borderRadius: 10, color:'#111827', cursor:'pointer', fontSize:24, fontWeight:400, width: 48, height: 48, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>+</button>
+            </div>
+          ) : (
+            <button className="dsh-cta-btn" style={{ width: '100%', padding: '16px 24px', fontSize: 16, justifyContent: 'center' }} onClick={() => onAddToCart(product)}>
+              <ShoppingCart size={18}/> Add to Cart
+            </button>
+          )}
         </div>
       </div>
 
@@ -1522,20 +1621,24 @@ function ProductDetailsView({ product, onBack, onAddToCart }: { product: any, on
   );
 }
 
-function CartView({ cart, onCheckout, onBack }: { cart: any[], onCheckout: () => void, onBack: () => void }) {
+function CartView({ cart, onCheckout, onBack, onAddToCart, onRemoveFromCart, isEmbedded }: { cart: any[], onCheckout: () => void, onBack: () => void, onAddToCart?: (product: any) => void, onRemoveFromCart?: (product: any) => void, isEmbedded?: boolean }) {
   const totalItems = cart.length;
   const totalPrice = cart.reduce((acc, item) => {
     const priceStr = item.price.replace(/[^0-9]/g, '');
     return acc + (parseInt(priceStr, 10) || 0) * 50;
   }, 0);
 
+  const uniqueCart = Array.from(new Map(cart.map(item => [item.id, item])).values());
+
   return (
-    <div className="dsh-content" style={{ maxWidth: 800, margin: '0 auto' }}>
+    <div className={isEmbedded ? "" : "dsh-content"} style={{ maxWidth: 800, margin: '0 auto', width: '100%' }}>
       <div className="dsh-page-header">
         <div>
-          <button className="dsh-ghost-btn" style={{ padding: 0, marginBottom: 12, color: '#8a9a84' }} onClick={onBack}>
-            &larr; Continue Shopping
-          </button>
+          {!isEmbedded && (
+            <button className="dsh-ghost-btn" style={{ padding: 0, marginBottom: 12, color: '#8a9a84' }} onClick={onBack}>
+              &larr; Continue Shopping
+            </button>
+          )}
           <h1 className="dsh-page-title">Your Cart</h1>
           <p className="dsh-page-sub">Review your items before proceeding to checkout.</p>
         </div>
@@ -1550,7 +1653,9 @@ function CartView({ cart, onCheckout, onBack }: { cart: any[], onCheckout: () =>
       ) : (
         <div style={{ display: 'flex', gap: 24, alignItems: 'flex-start', flexWrap: 'wrap' }}>
           <div style={{ flex: '2 1 300px', display: 'flex', flexDirection: 'column', gap: 16 }}>
-            {cart.map((item, idx) => (
+            {uniqueCart.map((item, idx) => {
+              const qty = cart.filter(c => c.id === item.id).length;
+              return (
               <div key={idx} className="dsh-card" style={{ padding: 16, display: 'flex', gap: 16, alignItems: 'center' }}>
                 <div style={{ width: 64, height: 64, background: '#f8faf7', borderRadius: 8, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                   <ProduceIcon name={item.name} size={32} />
@@ -1559,12 +1664,16 @@ function CartView({ cart, onCheckout, onBack }: { cart: any[], onCheckout: () =>
                   <h4 style={{ margin: '0 0 4px', fontSize: 16 }}>{item.name}</h4>
                   <p style={{ margin: 0, fontSize: 13, color: '#8a9a84' }}>Sold by {item.farmer}</p>
                 </div>
-                <div style={{ textAlign: 'right' }}>
-                  <p style={{ margin: '0 0 4px', fontSize: 16, fontWeight: 600 }}>{item.price}</p>
-                  <p style={{ margin: 0, fontSize: 12, color: '#8a9a84' }}>Qty: 50 kg</p>
+                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 8 }}>
+                  <p style={{ margin: 0, fontSize: 16, fontWeight: 600 }}>{item.price}</p>
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: '#fff', border: '1px solid #e5e7eb', borderRadius: 8, padding: '2px' }}>
+                    <button onClick={() => onRemoveFromCart && onRemoveFromCart(item)} style={{ background:'#f9fafb', border:'1px solid #f3f4f6', borderRadius: 6, color:'#111827', cursor:'pointer', fontSize:16, fontWeight:500, width: 26, height: 26, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>-</button>
+                    <span style={{ fontWeight: 600, color:'#111827', fontSize:13, margin: '0 12px' }}>{qty}</span>
+                    <button onClick={() => onAddToCart && onAddToCart(item)} style={{ background:'#f9fafb', border:'1px solid #f3f4f6', borderRadius: 6, color:'#111827', cursor:'pointer', fontSize:16, fontWeight:500, width: 26, height: 26, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>+</button>
+                  </div>
                 </div>
               </div>
-            ))}
+            )})}
           </div>
           
           <div className="dsh-card" style={{ flex: '1 1 250px', padding: 24 }}>
@@ -1627,7 +1736,7 @@ function RadarScannerModal({ onClose }: { onClose: () => void }) {
   );
 }
 
-function BrowseView({ onCheckout }: { onCheckout?: (item?: any) => void }) {
+function BrowseView({ onCheckout, onProductClick, onAddToCart, onRemoveFromCart, cart }: { onCheckout?: (item?: any) => void, onProductClick?: (item: any) => void, onAddToCart?: (item: any) => void, onRemoveFromCart?: (item: any) => void, cart?: any[] }) {
   const [search, setSearch] = useState('');
   const [category, setCategory] = useState('All');
   const [radius60, setRadius60] = useState(false);
@@ -1640,29 +1749,31 @@ function BrowseView({ onCheckout }: { onCheckout?: (item?: any) => void }) {
   });
   return (
     <div className="dsh-content">
-      <div className="dsh-page-header">
-        <div>
-          <h1 className="dsh-page-title">Browse Produce</h1>
-          <p className="dsh-page-sub">Fresh, verified produce from farmers across India.</p>
-        </div>
-        <div style={{ display:'flex', alignItems:'center', gap:10, background:'#f8faf7', padding:'6px 12px', borderRadius:20, border:'1px solid #ece9e3' }}>
-          <span style={{ fontSize:13, fontWeight:600, color: radius60 ? '#166534' : '#8a9a84' }}>60km Radius Only</span>
-          <div 
-            onClick={() => setRadius60(!radius60)}
-            style={{ width:36, height:20, background: radius60 ? '#166534' : '#d0ccc6', borderRadius:20, position:'relative', cursor:'pointer', transition:'0.3s' }}
-          >
-            <div style={{ width:16, height:16, background:'#fff', borderRadius:'50%', position:'absolute', top:2, left: radius60 ? 18 : 2, transition:'0.3s' }} />
-          </div>
+      <div style={{ marginBottom: 8 }}>
+        <div style={{ position: 'relative' }}>
+          <Search size={18} style={{ position: 'absolute', left: 16, top: 11, color: '#94a3b8' }}/>
+          <input
+            type="text"
+            placeholder="Search products, farmers, or locations..."
+            value={search}
+            onChange={e => setSearch(e.target.value)}
+            style={{ width: '100%', padding: '11px 16px 11px 44px', borderRadius: 9999, border: '1px solid #e2e8f0', outline: 'none', fontSize: 15, background: '#f8fafc', boxSizing: 'border-box' }}
+          />
         </div>
       </div>
+
+
+
       <div className="dsh-category-pills">
         {categories.map(c => (
           <button key={c} className={`dsh-pill ${category === c ? 'dsh-pill--active' : ''}`} onClick={() => setCategory(c)}>{c}</button>
         ))}
       </div>
       <div className="dsh-produce-grid dsh-produce-grid--wide">
-        {filtered.map(p => (
-          <div key={p.id} className="dsh-produce-card">
+        {filtered.map(p => {
+          const qty = cart?.filter(c => c.id === p.id).length || 0;
+          return (
+          <div key={p.id} className="dsh-produce-card" onClick={() => onProductClick && onProductClick(p)} style={{ cursor: 'pointer' }}>
             <div className="dsh-produce-card-top">
               <span className="dsh-produce-card-emoji"><ProduceIcon name={p.name} size={30} /></span>
               <span className="dsh-produce-badge">{p.badge}</span>
@@ -1682,17 +1793,25 @@ function BrowseView({ onCheckout }: { onCheckout?: (item?: any) => void }) {
                   <div className="dsh-produce-rating"><Star size={11} fill="currentColor"/>{p.rating}</div>
                 </div>
                 <div style={{ display: 'flex', gap: 6 }}>
-                  <button className="dsh-ghost-btn dsh-ghost-btn--border" style={{ flex: 1, padding: '6px 4px', fontSize: 12, borderRadius: 8, justifyContent: 'center', minWidth: 0 }}>
-                    <ShoppingCart size={12} style={{ marginRight: 4, flexShrink: 0 }} /> <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>Cart</span>
-                  </button>
-                  <button className="dsh-cta-btn" style={{ flex: 1, padding: '6px 4px', fontSize: 12, borderRadius: 8, justifyContent: 'center', minWidth: 0 }} onClick={() => onCheckout && onCheckout(p)}>
+                  {qty > 0 ? (
+                    <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: '#fff', border: '1px solid #e5e7eb', borderRadius: 8, padding: '2px' }} onClick={(e) => e.stopPropagation()}>
+                      <button onClick={(e) => { e.stopPropagation(); onRemoveFromCart && onRemoveFromCart(p); }} style={{ background:'#f9fafb', border:'1px solid #f3f4f6', borderRadius: 6, color:'#111827', cursor:'pointer', fontSize:16, fontWeight:500, width: 26, height: 26, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>-</button>
+                      <span style={{ fontWeight: 600, color:'#111827', fontSize:13 }}>{qty}</span>
+                      <button onClick={(e) => { e.stopPropagation(); onAddToCart && onAddToCart(p); }} style={{ background:'#f9fafb', border:'1px solid #f3f4f6', borderRadius: 6, color:'#111827', cursor:'pointer', fontSize:16, fontWeight:500, width: 26, height: 26, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>+</button>
+                    </div>
+                  ) : (
+                    <button className="dsh-ghost-btn dsh-ghost-btn--border" style={{ flex: 1, padding: '6px 4px', fontSize: 12, borderRadius: 8, justifyContent: 'center', minWidth: 0 }} onClick={(e) => { e.stopPropagation(); onAddToCart && onAddToCart(p); }}>
+                      <ShoppingCart size={12} style={{ marginRight: 4, flexShrink: 0 }} /> <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>Cart</span>
+                    </button>
+                  )}
+                  <button className="dsh-cta-btn" style={{ flex: 1, padding: '6px 4px', fontSize: 12, borderRadius: 8, justifyContent: 'center', minWidth: 0 }} onClick={(e) => { e.stopPropagation(); onCheckout && onCheckout(p); }}>
                     <Zap size={12} style={{ marginRight: 4, flexShrink: 0 }} /> <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>Buy Now</span>
                   </button>
                 </div>
               </div>
             </div>
           </div>
-        ))}
+        )})}
         {filtered.length === 0 && <div style={{ gridColumn:'1/-1' }} className="dsh-empty-state"><Search size={36}/><p>No produce found.</p></div>}
       </div>
     </div>
@@ -1839,8 +1958,27 @@ function SettingsView({ onNavigate }: { onNavigate: (id: string) => void }) {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
   const handleLogout = () => { logout(); navigate('/login'); };
+  const [radius60, setRadius60] = useState(false);
 
   const sections = [
+    {
+      label: 'Preferences',
+      items: [
+        { 
+          icon: <MapPin size={17}/>,
+          label: '60km Radius Only',
+          sub: 'Only show farmers within 60km',
+          action: () => setRadius60(!radius60),
+          rightElement: (
+            <div 
+              style={{ width:36, height:20, background: radius60 ? '#166534' : '#d0ccc6', borderRadius:20, position:'relative', transition:'0.3s' }}
+            >
+              <div style={{ width:16, height:16, background:'#fff', borderRadius:'50%', position:'absolute', top:2, left: radius60 ? 18 : 2, transition:'0.3s' }} />
+            </div>
+          )
+        },
+      ],
+    },
     {
       label: 'Account',
       items: [
@@ -1885,7 +2023,7 @@ function SettingsView({ onNavigate }: { onNavigate: (id: string) => void }) {
                     <span className="sv-row-label">{item.label}</span>
                     <span className="sv-row-sub">{item.sub}</span>
                   </div>
-                  <ChevronRight size={14} style={{color:'#c7c7cc',flexShrink:0}}/>
+                  {(item as any).rightElement || <ChevronRight size={14} style={{color:'#c7c7cc',flexShrink:0}}/>}
                 </button>
               </div>
             ))}
@@ -2088,13 +2226,13 @@ const farmerNav = [
 
 const buyerNav = [
   { icon:<Home size={16}/>, label:'Home', id:'dashboard' },
-  { icon:<ShoppingCart size={16}/>,    label:'My Orders', id:'orders'   },
-  { icon:<Package size={16}/>,         label:'Browse',    id:'browse'   },
+  { icon:<Search size={16}/>,         label:'Search',    id:'browse'   },
   { icon:<Users size={16}/>,           label:'Farmers',   id:'farmers'  },
+  { icon:<ShoppingCart size={16}/>,    label:'My Orders', id:'orders'   },
   { icon:<TrendingUp size={16}/>,      label:'Spending',  id:'spending' },
 ];
 
-function CheckoutView({ item, onConfirm, onCancel }: { item: any, onConfirm: () => void, onCancel: () => void }) {
+function CheckoutView({ item, onConfirm, onCancel }: { item: any, onConfirm: (details: any) => void, onCancel: () => void }) {
   const [form, setForm] = useState({ address: '', email: '', phone: '', quantity: '50' });
   const [loading, setLoading] = useState(false);
 
@@ -2105,7 +2243,7 @@ function CheckoutView({ item, onConfirm, onCancel }: { item: any, onConfirm: () 
     setLoading(true);
     setTimeout(() => {
       setLoading(false);
-      onConfirm();
+      onConfirm({ quantity: form.quantity, total });
     }, 1500);
   };
 
@@ -2206,6 +2344,16 @@ export default function DashboardPage() {
   const [checkoutItem, setCheckoutItem] = useState<any>(null);
   const [cart, setCart] = useState<any[]>([]);
   const [selectedProduct, setSelectedProduct] = useState<any>(null);
+  const [buyerOrders, setBuyerOrders] = useState<Order[]>(allBuyerOrders);
+
+  const handleRemoveFromCart = (prod: any) => {
+    const index = cart.findIndex(c => c.id === prod.id);
+    if (index !== -1) {
+      const newCart = [...cart];
+      newCart.splice(index, 1);
+      setCart(newCart);
+    }
+  };
   
   const [globalSearch, setGlobalSearch] = useState('');
   const [searchFocused, setSearchFocused] = useState(false);
@@ -2238,7 +2386,7 @@ export default function DashboardPage() {
         }
       });
     } else {
-      allBuyerOrders.forEach(o => {
+      buyerOrders.forEach(o => {
         if (o.id.toLowerCase().includes(query) || o.farmer?.toLowerCase().includes(query) || o.item.toLowerCase().includes(query)) {
           results.push({ type: 'Order', label: `${o.id} - ${o.item} (${o.farmer})`, id: 'orders' });
         }
@@ -2261,10 +2409,29 @@ export default function DashboardPage() {
     if (activeNav === 'profile') return <ProfileView />;
     if (activeNav === 'messages') return <MessagesView />;
     if (activeNav === 'notifications') return <NotificationsView />;
-    if (activeNav === 'checkout') return <CheckoutView item={checkoutItem} onConfirm={() => setActiveNav('order_success')} onCancel={() => setActiveNav('browse')} />;
+    if (activeNav === 'checkout') return (
+      <CheckoutView 
+        item={checkoutItem} 
+        onConfirm={(details) => {
+          const newOrder: Order = {
+            id: `#ORD-${Math.floor(1000 + Math.random() * 9000)}`,
+            date: 'Just now',
+            item: cart.length > 1 ? `${cart.length} Items` : (checkoutItem?.name || 'Produce'),
+            qty: cart.length > 1 ? 'Multiple' : `${details.quantity} kg`,
+            status: 'processing',
+            amount: `₹${details.total.toLocaleString('en-IN')}`,
+            farmer: cart.length > 1 ? 'Multiple Farmers' : (checkoutItem?.farmer || 'Farmer')
+          };
+          setBuyerOrders([newOrder, ...buyerOrders]);
+          setCart([]);
+          setActiveNav('order_success');
+        }} 
+        onCancel={() => setActiveNav('browse')} 
+      />
+    );
     if (activeNav === 'order_success') return <OrderSuccessView onTrackOrder={() => setActiveNav('orders')} />;
-    if (activeNav === 'product_details') return <ProductDetailsView product={selectedProduct} onBack={() => setActiveNav('dashboard')} onAddToCart={(prod) => { setCart([...cart, prod]); setActiveNav('cart'); }} />;
-    if (activeNav === 'cart') return <CartView cart={cart} onCheckout={() => setActiveNav('checkout')} onBack={() => setActiveNav('dashboard')} />;
+    if (activeNav === 'product_details') return <ProductDetailsView product={selectedProduct} cart={cart} onBack={() => setActiveNav('dashboard')} onAddToCart={(prod) => setCart([...cart, prod])} onRemoveFromCart={handleRemoveFromCart} />;
+
     if (isFarmer) {
       switch (activeNav) {
         case 'dashboard': return <FarmerDashboardView onNavigate={handleNav} />;
@@ -2276,12 +2443,22 @@ export default function DashboardPage() {
       }
     } else {
       switch (activeNav) {
-        case 'dashboard': return <BuyerDashboardView onCheckout={(item) => { setCheckoutItem(item); setActiveNav('checkout'); }} onProductClick={(item) => { setSelectedProduct(item); setActiveNav('product_details'); }} />;
-        case 'orders':    return <OrdersView orders={allBuyerOrders} role="buyer" />;
-        case 'browse':    return <BrowseView onCheckout={(item) => { setCheckoutItem(item); setActiveNav('checkout'); }} />;
+        case 'dashboard': return <BuyerDashboardView onCheckout={(item) => { setCheckoutItem(item); setActiveNav('checkout'); }} onProductClick={(item) => { setSelectedProduct(item); setActiveNav('product_details'); }} onBrowse={() => setActiveNav('browse')} />;
+        case 'orders':    
+          return (
+            <div className="dsh-content" style={{ display: 'flex', flexDirection: 'column', paddingBottom: 60 }}>
+              {cart.length > 0 && (
+                <div style={{ marginBottom: 32 }}>
+                  <CartView cart={cart} onCheckout={() => { setCheckoutItem(cart[0]); setActiveNav('checkout'); }} onBack={() => setActiveNav('dashboard')} onAddToCart={(prod) => setCart([...cart, prod])} onRemoveFromCart={handleRemoveFromCart} isEmbedded={true} />
+                </div>
+              )}
+              <OrdersView orders={buyerOrders} role="buyer" isEmbedded={true} />
+            </div>
+          );
+        case 'browse':    return <BrowseView cart={cart} onCheckout={(item) => { setCheckoutItem(item); setActiveNav('checkout'); }} onProductClick={(item) => { setSelectedProduct(item); setActiveNav('product_details'); }} onAddToCart={(prod) => setCart([...cart, prod])} onRemoveFromCart={handleRemoveFromCart} />;
         case 'farmers':   return <FarmersView />;
         case 'spending':  return <SpendingView />;
-        default:          return <BuyerDashboardView onCheckout={(item) => { setCheckoutItem(item); setActiveNav('checkout'); }} onProductClick={(item) => { setSelectedProduct(item); setActiveNav('product_details'); }} />;
+        default:          return <BuyerDashboardView onCheckout={(item) => { setCheckoutItem(item); setActiveNav('checkout'); }} onProductClick={(item) => { setSelectedProduct(item); setActiveNav('product_details'); }} onBrowse={() => setActiveNav('browse')} />;
       }
     }
   };
@@ -2417,6 +2594,23 @@ export default function DashboardPage() {
       </main>
 
       {/* ── MOBILE BOTTOM NAV ── */}
+      {/* Floating View Cart Capsule */}
+      {cart.length > 0 && activeNav !== 'profile' && activeNav !== 'orders' && activeNav !== 'checkout' && activeNav !== 'order_success' && (
+        <div 
+          onClick={() => setActiveNav('orders')}
+          style={{ position:'fixed', bottom: 84, left: '50%', transform: 'translateX(-50%)', background:'#166534', color:'#fff', width: 'calc(100% - 32px)', maxWidth: 400, padding:'14px 20px', borderRadius:9999, display:'flex', alignItems:'center', justifyContent: 'space-between', cursor:'pointer', boxShadow:'0 8px 24px rgba(22,101,52,0.4)', zIndex:99, animation: 'kkv2FadeUp 0.3s cubic-bezier(0.16,1,0.3,1)', boxSizing: 'border-box' }}
+        >
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+            <ShoppingCart size={18} />
+            <span style={{ fontWeight: 600, fontSize: 15 }}>{cart.length} item{cart.length > 1 ? 's' : ''}</span>
+          </div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+            <span style={{ fontWeight: 600, fontSize: 15 }}>View Cart</span>
+            <ChevronRight size={18} />
+          </div>
+        </div>
+      )}
+
       <nav className="dsh-bottom-nav" aria-label="Mobile navigation">
         {bottomNavItems.map(item => (
           <button
@@ -2426,7 +2620,6 @@ export default function DashboardPage() {
           >
             <span className="dsh-bottom-nav-icon">{item.icon}</span>
             <span className="dsh-bottom-nav-label">{item.label}</span>
-            {activeNav === item.id && <span className="dsh-bottom-nav-pip" />}
           </button>
         ))}
       </nav>
