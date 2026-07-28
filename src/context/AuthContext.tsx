@@ -1,4 +1,7 @@
-import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import { createContext, useContext, useState, useEffect, type ReactNode } from 'react';
+import { auth } from '../firebase';
+import { signInWithEmailAndPassword, createUserWithEmailAndPassword, onAuthStateChanged, signOut, updateProfile as updateFbProfile } from 'firebase/auth';
+import { api } from '../lib/api';
 
 export interface User {
   id: string;
@@ -8,6 +11,8 @@ export interface User {
   mobile: string;
   location: string;
   landSurveyNumber?: string;
+  coordinates?: string;
+  profilePhoto?: string;
   joinedAt: string;
 }
 
@@ -19,48 +24,55 @@ interface AuthContextType {
     email: string,
     password: string,
     role: 'farmer' | 'buyer',
-    details: { fullName: string; mobile: string; location: string; landSurveyNumber?: string; }
+    details: { fullName: string; mobile: string; location: string; landSurveyNumber?: string; coordinates?: string; profilePhoto?: string }
   ) => Promise<{ success: boolean; error?: string }>;
-  updateProfile: (data: Partial<Pick<User, 'fullName' | 'mobile' | 'location' | 'landSurveyNumber'>>) => void;
+  updateProfile: (data: Partial<Pick<User, 'fullName' | 'mobile' | 'location' | 'landSurveyNumber' | 'coordinates' | 'profilePhoto'>>) => Promise<{ success: boolean; error?: string }>;
   logout: () => void;
 }
 
 const AuthContext = createContext<AuthContextType | null>(null);
-
-const USERS_KEY = 'kkd_users';
-const SESSION_KEY = 'kkd_session';
-
-const getUsers = (): User[] => {
-  try { return JSON.parse(localStorage.getItem(USERS_KEY) || '[]'); } catch { return []; }
-};
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    try {
-      const s = localStorage.getItem(SESSION_KEY);
-      if (s) setUser(JSON.parse(s));
-    } catch { /* ignore */ }
-    setIsLoading(false);
+    const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
+      if (firebaseUser) {
+        try {
+          // Sync with backend to get role and extra details
+          const { data } = await api.post('/users/sync');
+          setUser({
+            id: firebaseUser.uid,
+            email: firebaseUser.email || '',
+            role: data.user.role || 'buyer',
+            fullName: data.user.name || firebaseUser.displayName || '',
+            mobile: data.user.mobile || '',
+            location: data.user.location || '',
+            landSurveyNumber: data.user.landSurveyNumber || '',
+            joinedAt: data.user.createdAt || new Date().toISOString()
+          });
+        } catch (error) {
+          console.error("Failed to sync user data", error);
+        }
+      } else {
+        setUser(null);
+      }
+      setIsLoading(false);
+    });
+    return () => unsubscribe();
   }, []);
 
   const login = async (email: string, password: string) => {
     setIsLoading(true);
-    await new Promise(r => setTimeout(r, 700));
-    const users = getUsers();
-    const stored = localStorage.getItem(`kkd_pw_${email}`);
-    if (!stored || stored !== btoa(password)) {
+    try {
+      await signInWithEmailAndPassword(auth, email, password);
+      // onAuthStateChanged will handle setting the user
+      return { success: true };
+    } catch (error: any) {
       setIsLoading(false);
-      return { success: false, error: 'Invalid email or password.' };
+      return { success: false, error: error.message || 'Invalid email or password.' };
     }
-    const found = users.find(u => u.email === email);
-    if (!found) { setIsLoading(false); return { success: false, error: 'Account not found.' }; }
-    setUser(found);
-    localStorage.setItem(SESSION_KEY, JSON.stringify(found));
-    setIsLoading(false);
-    return { success: true };
   };
 
   const register = async (
@@ -70,46 +82,58 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     details: { fullName: string; mobile: string; location: string; landSurveyNumber?: string; }
   ) => {
     setIsLoading(true);
-    await new Promise(r => setTimeout(r, 700));
-    const users = getUsers();
-    if (users.find(u => u.email === email)) {
+    try {
+      const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+      await updateFbProfile(userCredential.user, { displayName: details.fullName });
+      
+      // Wait for the token to be available
+      await userCredential.user.getIdToken(true);
+
+      // Sync and store extra details in backend
+      const { data } = await api.post('/users/sync', {
+        role,
+        fullName: details.fullName,
+        mobile: details.mobile,
+        location: details.location,
+        landSurveyNumber: details.landSurveyNumber
+      });
+
+      setUser({
+        id: userCredential.user.uid,
+        email,
+        role,
+        fullName: details.fullName,
+        mobile: details.mobile,
+        location: details.location,
+        landSurveyNumber: details.landSurveyNumber,
+        joinedAt: data.user.createdAt
+      });
+
       setIsLoading(false);
-      return { success: false, error: 'Email already registered.' };
+      return { success: true };
+    } catch (error: any) {
+      setIsLoading(false);
+      return { success: false, error: error.message || 'Registration failed.' };
     }
-    const newUser: User = {
-      id: crypto.randomUUID(),
-      email,
-      role,
-      fullName: details.fullName,
-      mobile: details.mobile,
-      location: details.location,
-      landSurveyNumber: details.landSurveyNumber,
-      joinedAt: new Date().toISOString()
-    };
-    users.push(newUser);
-    localStorage.setItem(USERS_KEY, JSON.stringify(users));
-    localStorage.setItem(`kkd_pw_${email}`, btoa(password));
-    setUser(newUser);
-    localStorage.setItem(SESSION_KEY, JSON.stringify(newUser));
-    setIsLoading(false);
-    return { success: true };
   };
 
-  const updateProfile = (data: Partial<Pick<User, 'fullName' | 'mobile' | 'location' | 'landSurveyNumber'>>) => {
-    if (!user) return;
-    const updated = { ...user, ...data };
-    // Update in users array
-    const users = getUsers();
-    const idx = users.findIndex(u => u.id === user.id);
-    if (idx !== -1) { users[idx] = updated; localStorage.setItem(USERS_KEY, JSON.stringify(users)); }
-    // Update session
-    setUser(updated);
-    localStorage.setItem(SESSION_KEY, JSON.stringify(updated));
+  const updateProfile = async (data: Partial<Pick<User, 'fullName' | 'mobile' | 'location' | 'landSurveyNumber'>>) => {
+    if (!user) return { success: false, error: 'Not authenticated' };
+    try {
+      const { data: responseData } = await api.post('/users/sync', data);
+      setUser({
+        ...user,
+        ...data,
+      });
+      return { success: true };
+    } catch (error: any) {
+      return { success: false, error: 'Failed to update profile' };
+    }
   };
 
-  const logout = () => {
+  const logout = async () => {
+    await signOut(auth);
     setUser(null);
-    localStorage.removeItem(SESSION_KEY);
   };
 
   return (

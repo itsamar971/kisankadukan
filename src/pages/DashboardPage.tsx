@@ -8,97 +8,32 @@ import {
   Wheat, Truck, CheckCircle2, Clock, BarChart3, Sprout,
   IndianRupee, Search, Filter, Download, Edit2, Trash2, Eye,
   User, Save, AlertCircle, Tractor, FileText, Calendar, Package2,
-  MessageSquare, Sparkles, ArrowRight, Apple, Target, Zap, Shield, Home
+  MessageSquare, Sparkles, ArrowRight, Apple, Target, Zap, Shield, Home, Upload
 } from 'lucide-react';
+import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
+import { storage } from '../firebase';
 
-/* ═══════════════════════════ MOCK DATA ═══════════════════════════ */
+/* ═══════════════════════════ API DATA TYPES ═══════════════════════════ */
+import { api } from '../lib/api';
 
 type OrderStatus = 'processing' | 'dispatched' | 'delivered' | 'cancelled';
 type ListingStatus = 'active' | 'sold' | 'pending';
 
 interface FarmerListing {
-  id: number; name: string; qty: string; price: string;
-  status: ListingStatus; buyers: number; img: string; category: string; addedDate: string;
+  id: string; name: string; stockQuantityKg: number; pricePerKg: number;
+  status: ListingStatus; description: string; category: string; createdAt: string; farmerId: string;
 }
 interface Order {
-  id: string; buyer?: string; farmer?: string; item: string; amount: string;
-  status: OrderStatus; time: string; eta?: string; loc?: string; qty: string; unitPrice: string;
+  id: string; buyerId?: string; farmerId?: string; productId: string; totalAmount: number;
+  status: OrderStatus; createdAt: string; deliveryAddress?: string; quantityKg: number;
+  // added fields for UI
+  item?: string; buyer?: string; farmer?: string; amount?: string; time?: string; qty?: string; unitPrice?: string;
+  loc?: string; eta?: string; date?: string;
 }
 interface BrowseProduce {
-  id: number; name: string; farmer: string; loc: string; price: string;
+  id: string; name: string; farmer: string; loc: string; price: string;
   rating: number; qty: string; img: string; badge: string; category: string; phone: string;
 }
-
-const farmerListings: FarmerListing[] = [
-  { id: 1, name: 'Fresh Tomatoes',      qty: '500 kg',  price: '₹28/kg', status: 'active',  buyers: 3, img: '', category: 'Vegetables', addedDate: '15 Jul 2026' },
-  { id: 2, name: 'Organic Onions',      qty: '800 kg',  price: '₹22/kg', status: 'active',  buyers: 5, img: '', category: 'Vegetables', addedDate: '12 Jul 2026' },
-  { id: 3, name: 'Green Chillies',      qty: '120 kg',  price: '₹60/kg', status: 'sold',    buyers: 1, img: '', category: 'Spices',     addedDate: '10 Jul 2026' },
-  { id: 4, name: 'Wheat (Grade A)',     qty: '2000 kg', price: '₹24/kg', status: 'active',  buyers: 8, img: '', category: 'Grains',     addedDate: '8 Jul 2026'  },
-  { id: 5, name: 'Brinjal (Aubergine)',qty: '300 kg',  price: '₹18/kg', status: 'pending', buyers: 0, img: '', category: 'Vegetables', addedDate: '6 Jul 2026'  },
-];
-
-const allFarmerOrders: Order[] = [
-  { id: '#ORD-2841', buyer: 'Arjun Mehta',    item: 'Fresh Tomatoes',  amount: '₹5,600',  status: 'dispatched', time: '2h ago',  qty: '200 kg', unitPrice: '₹28/kg' },
-  { id: '#ORD-2839', buyer: 'Green Basket Co.',item: 'Organic Onions', amount: '₹8,800',  status: 'delivered',  time: '1d ago',  qty: '400 kg', unitPrice: '₹22/kg' },
-  { id: '#ORD-2835', buyer: 'FreshMart Pune', item: 'Wheat (Grade A)', amount: '₹24,000', status: 'processing', time: '2d ago',  qty: '1000 kg', unitPrice: '₹24/kg' },
-  { id: '#ORD-2830', buyer: 'Hotel Meridian', item: 'Green Chillies',  amount: '₹4,800',  status: 'delivered',  time: '3d ago',  qty: '80 kg',  unitPrice: '₹60/kg' },
-  { id: '#ORD-2825', buyer: 'D-Mart Nashik',  item: 'Fresh Tomatoes',  amount: '₹8,400',  status: 'delivered',  time: '5d ago',  qty: '300 kg', unitPrice: '₹28/kg' },
-  { id: '#ORD-2819', buyer: 'Swiggy Instamart',item: 'Organic Onions', amount: '₹4,400',  status: 'cancelled',  time: '7d ago',  qty: '200 kg', unitPrice: '₹22/kg' },
-];
-
-const allBuyerOrders: Order[] = [
-  { id: '#ORD-2841', farmer: 'Ramesh Patel',   item: 'Tomatoes',         amount: '₹5,600',  status: 'dispatched', time: '2h ago',  eta: 'Tomorrow',   loc: 'Nashik, MH',   qty: '200 kg', unitPrice: '₹28/kg' },
-  { id: '#ORD-2836', farmer: 'Sunita Devi',    item: 'Wheat',            amount: '₹12,000', status: 'delivered',  time: '3d ago',  eta: 'Delivered',  loc: 'Amritsar, PB', qty: '500 kg', unitPrice: '₹24/kg' },
-  { id: '#ORD-2829', farmer: 'Kishan Yadav',   item: 'Onions',           amount: '₹6,600',  status: 'processing', time: '4d ago',  eta: '3 days',     loc: 'Nashik, MH',   qty: '300 kg', unitPrice: '₹22/kg' },
-  { id: '#ORD-2820', farmer: 'Priya Farms',    item: 'Brinjal',          amount: '₹1,800',  status: 'delivered',  time: '6d ago',  eta: 'Delivered',  loc: 'Pune, MH',     qty: '100 kg', unitPrice: '₹18/kg' },
-  { id: '#ORD-2812', farmer: 'Devidas Gawde',  item: 'Alphonso Mangoes', amount: '₹9,000',  status: 'delivered',  time: '10d ago', eta: 'Delivered',  loc: 'Ratnagiri, MH',qty: '50 kg',  unitPrice: '₹180/kg' },
-  { id: '#ORD-2801', farmer: 'Gurpreet Singh', item: 'Basmati Rice',     amount: '₹8,500',  status: 'cancelled',  time: '14d ago', eta: '—',          loc: 'Amritsar, PB', qty: '100 kg', unitPrice: '₹85/kg' },
-];
-
-const browseProduce: BrowseProduce[] = [
-  { id:1,  name:'Alphonso Mangoes',       farmer:'Devidas Gawde',  loc:'Ratnagiri, MH',  price:'₹180/kg', rating:4.9, qty:'200 kg',  img:'', badge:'Premium',  category:'Fruits',      phone:'+91 94201 11222' },
-  { id:2,  name:'Organic Basmati Rice',   farmer:'Gurpreet Singh', loc:'Amritsar, PB',   price:'₹85/kg',  rating:4.7, qty:'1000 kg', img:'', badge:'Organic',  category:'Grains',      phone:'+91 98760 22111' },
-  { id:3,  name:'Cherry Tomatoes',        farmer:'Lakshmi Farms',  loc:'Coorg, KA',      price:'₹45/kg',  rating:4.8, qty:'150 kg',  img:'', badge:'Fresh',    category:'Vegetables',  phone:'+91 80001 33444' },
-  { id:4,  name:'Turmeric Powder',        farmer:'Venkat Reddy',   loc:'Erode, TN',      price:'₹120/kg', rating:4.6, qty:'500 kg',  img:'', badge:'Spice',    category:'Spices',      phone:'+91 73001 44555' },
-  { id:5,  name:'Fresh Spinach',          farmer:'Ravi Kumar',     loc:'Bengaluru, KA',  price:'₹30/kg',  rating:4.5, qty:'80 kg',   img:'', badge:'Fresh',    category:'Vegetables',  phone:'+91 99001 55666' },
-  { id:6,  name:'A2 Desi Ghee',          farmer:'Meera Dairy',    loc:'Anand, GJ',      price:'₹600/kg', rating:4.9, qty:'50 kg',   img:'', badge:'Premium',  category:'Dairy',       phone:'+91 92001 66777' },
-  { id:7,  name:'Black Pepper (Bold)',    farmer:'Jose Plantations',loc:'Wayanad, KL',    price:'₹550/kg', rating:4.8, qty:'200 kg',  img:'', badge:'Spice',    category:'Spices',      phone:'+91 87001 77888' },
-  { id:8,  name:'Amla (Indian Gooseberry)',farmer:'Geeta Farms',   loc:'Pratapgarh, UP', price:'₹40/kg',  rating:4.4, qty:'300 kg',  img:'', badge:'Organic',  category:'Fruits',      phone:'+91 80501 88999' },
-];
-
-const connectedFarmers = [
-  { id:1, name:'Ramesh Patel',    loc:'Nashik, MH',     crops:['Tomatoes','Onions','Chillies'], rating:4.9, orders:5,  totalSpent:'₹26,400', joined:'Feb 2026', phone:'+91 94201 11111', verified:true },
-  { id:2, name:'Sunita Devi',     loc:'Amritsar, PB',   crops:['Wheat','Rice'],                  rating:4.7, orders:3,  totalSpent:'₹14,000', joined:'Mar 2026', phone:'+91 98760 22222', verified:true },
-  { id:3, name:'Kishan Yadav',    loc:'Nashik, MH',     crops:['Onions','Potatoes'],             rating:4.5, orders:2,  totalSpent:'₹8,200',  joined:'Apr 2026', phone:'+91 73001 33333', verified:true },
-  { id:4, name:'Priya Farms',     loc:'Pune, MH',       crops:['Brinjal','Capsicum'],            rating:4.6, orders:1,  totalSpent:'₹1,800',  joined:'May 2026', phone:'+91 80001 44444', verified:false },
-  { id:5, name:'Devidas Gawde',   loc:'Ratnagiri, MH',  crops:['Mangoes','Cashews'],             rating:5.0, orders:1,  totalSpent:'₹9,000',  joined:'Jun 2026', phone:'+91 92001 55555', verified:true },
-];
-
-const connectedBuyers = [
-  { id:1, name:'Arjun Mehta',     loc:'Mumbai, MH',     type:'Restaurant Owner', orders:5,  totalBought:'₹28,000', rating:4.8, joined:'Jan 2026' },
-  { id:2, name:'Green Basket Co.',loc:'Pune, MH',        type:'Retailer',         orders:4,  totalBought:'₹22,000', rating:4.6, joined:'Feb 2026' },
-  { id:3, name:'FreshMart Pune',  loc:'Pune, MH',        type:'Supermarket',      orders:3,  totalBought:'₹36,000', rating:4.9, joined:'Mar 2026' },
-  { id:4, name:'Hotel Meridian',  loc:'Nashik, MH',      type:'Hotel',            orders:2,  totalBought:'₹9,600',  rating:4.5, joined:'Apr 2026' },
-  { id:5, name:'D-Mart Nashik',   loc:'Nashik, MH',      type:'Supermarket',      orders:2,  totalBought:'₹16,800', rating:4.7, joined:'May 2026' },
-];
-
-const marketPrices = [
-  { crop:'Tomato',  msp:'₹25/kg',  current:'₹28/kg', trend:'up'   },
-  { crop:'Onion',   msp:'₹18/kg',  current:'₹22/kg', trend:'up'   },
-  { crop:'Wheat',   msp:'₹21/kg',  current:'₹24/kg', trend:'up'   },
-  { crop:'Rice',    msp:'₹30/kg',  current:'₹28/kg', trend:'down' },
-  { crop:'Potato',  msp:'₹15/kg',  current:'₹13/kg', trend:'down' },
-];
-
-const monthlyRevenue = [
-  { month:'Feb', amount:18400 }, { month:'Mar', amount:24200 }, { month:'Apr', amount:31500 },
-  { month:'May', amount:27800 }, { month:'Jun', amount:39000 }, { month:'Jul', amount:43200 },
-];
-
-const monthlySpending = [
-  { month:'Feb', amount:6400 }, { month:'Mar', amount:9800 }, { month:'Apr', amount:14200 },
-  { month:'May', amount:7600 }, { month:'Jun', amount:19600 }, { month:'Jul', amount:26200 },
-];
 
 function MessagesView() {
   const [messages, setMessages] = useState([
@@ -409,6 +344,22 @@ function RevenueLineChart({ data }: { data: { month: string; amount: number }[] 
   const paddingX = 30;
   const paddingY = 18;
   
+  if (data.length < 2) {
+    return (
+      <div className="dsh-saas-card dsh-chart-card">
+        <div className="dsh-saas-card-header">
+          <div>
+            <h3 className="dsh-card-title">Monthly Revenue</h3>
+            <p className="dsh-card-subtitle">Earning trajectory from agricultural sales</p>
+          </div>
+        </div>
+        <div style={{ height: height, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#94a3b8' }}>
+          Not enough data yet
+        </div>
+      </div>
+    );
+  }
+
   const points = data.map((d, i) => {
     const x = paddingX + (i / (data.length - 1)) * (width - 2 * paddingX);
     const y = height - paddingY - ((d.amount - min) / (max - min)) * (height - 2 * paddingY);
@@ -514,6 +465,105 @@ function RevenueLineChart({ data }: { data: { month: string; amount: number }[] 
 }
 
 function FarmerDashboardView({ onNavigate }: { onNavigate?: (navId: string) => void }) {
+  const { user } = useAuth();
+  const [marketPrices, setMarketPrices] = useState<any[]>([]);
+  const [listings, setListings] = useState<any[]>([]);
+  const [orders, setOrders] = useState<any[]>([]);
+  const [connectedBuyers, setConnectedBuyers] = useState<any[]>([]);
+  const [monthlyRevenue, setMonthlyRevenue] = useState<any[]>([]);
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const [pricesRes, listingsRes, ordersRes] = await Promise.all([
+          api.get('/market/prices'),
+          api.get('/products'),
+          api.get('/orders')
+        ]);
+        setMarketPrices(pricesRes.data);
+        setListings(listingsRes.data);
+        setOrders(ordersRes.data);
+        
+        // Dynamically calculate revenue and unique buyers from orders
+        const revenueMap: Record<string, number> = {};
+        const buyersMap: Record<string, any> = {};
+        
+        ordersRes.data.forEach((o: any) => {
+          const date = new Date(o.createdAt);
+          const month = date.toLocaleString('default', { month: 'short' });
+          revenueMap[month] = (revenueMap[month] || 0) + (o.totalAmount || 0);
+          
+          if (o.buyerId && !buyersMap[o.buyerId]) {
+            buyersMap[o.buyerId] = {
+               id: o.buyerId,
+               name: o.buyer || `Buyer ${o.buyerId.substring(0,4)}`,
+               loc: o.deliveryAddress || 'Unknown',
+               type: 'Customer'
+            };
+          }
+        });
+
+        // Ensure at least some default months show up on the chart
+        const defaultMonths = ['Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul'];
+        const formattedRevenue = defaultMonths.map(m => ({
+          month: m,
+          amount: revenueMap[m] || 0
+        }));
+        
+        setMonthlyRevenue(formattedRevenue);
+        setConnectedBuyers(Object.values(buyersMap));
+      } catch (err) {
+        console.error("Failed to fetch dashboard data:", err);
+      }
+    };
+    fetchData();
+  }, []);
+
+  const activeListingsCount = listings.length;
+  const pendingOrdersCount = orders.filter(o => o.status === 'processing').length;
+  const activeBuyersCount = connectedBuyers.length;
+  
+  // Verification Logic
+  const needsVerification = user?.lastVerifiedAt 
+    ? Date.now() - new Date(user.lastVerifiedAt).getTime() > 30 * 24 * 60 * 60 * 1000 
+    : true;
+  const [showVerificationModal, setShowVerificationModal] = useState(needsVerification);
+  const [verifyFile, setVerifyFile] = useState<File | null>(null);
+  const [verifyLoading, setVerifyLoading] = useState(false);
+
+  const handleVerifySubmit = async () => {
+    if (!verifyFile || !user) return;
+    setVerifyLoading(true);
+    try {
+      const reader = new FileReader();
+      reader.onloadend = async () => {
+        try {
+          const base64Data = reader.result;
+          await api.post('/users/verify', { imageBase64: base64Data });
+          
+          if (user) {
+            user.lastVerifiedAt = new Date().toISOString();
+          }
+          setShowVerificationModal(false);
+          setVerifyLoading(false);
+        } catch (err: any) {
+          console.error(err);
+          const backendError = err.response?.data?.error || err.message;
+          alert(`Verification failed: ${backendError}`);
+          setVerifyLoading(false);
+        }
+      };
+      reader.readAsDataURL(verifyFile);
+    } catch (err) {
+      console.error(err);
+      alert('Verification failed. Please try again.');
+      setVerifyLoading(false);
+    }
+  };
+  
+  const currentMonth = new Date().toLocaleString('default', { month: 'short' });
+  const currentMonthRevenue = monthlyRevenue.find(m => m.month === currentMonth)?.amount || 0;
+
   return (
     <div className="dsh-content">
 
@@ -522,6 +572,63 @@ function FarmerDashboardView({ onNavigate }: { onNavigate?: (navId: string) => v
 
         {/* LEFT & CENTER COLUMN (MAIN FEED) */}
         <div className="dsh-3col-main">
+
+          {needsVerification && !showVerificationModal && (
+            <div className="animate-[kkv2FadeUp_0.4s_ease]" style={{ 
+              background: '#f8fafc',
+              border: '1px solid #e2e8f0', 
+              borderRadius: 24, 
+              padding: 32, 
+              marginBottom: 24, 
+              display: 'flex', 
+              flexDirection: 'column',
+              gap: 20,
+              boxShadow: '0 4px 20px -2px rgba(0, 0, 0, 0.03)',
+              position: 'relative',
+              overflow: 'hidden'
+            }}>
+              {/* Subtle background watermark */}
+              <div style={{ position: 'absolute', right: -20, bottom: -40, fontSize: 180, fontWeight: 800, color: '#f1f5f9', lineHeight: 1, zIndex: 0, pointerEvents: 'none', userSelect: 'none' }}>
+                !
+              </div>
+
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 16, position: 'relative', zIndex: 1 }}>
+                <div style={{ 
+                  width: 48, height: 48, 
+                  borderRadius: '50%', 
+                  border: '1px solid #cbd5e1', 
+                  background: '#f1f5f9', 
+                  display: 'flex', alignItems: 'center', justifyContent: 'center', 
+                  color: '#334155' 
+                }}>
+                  <Shield size={20} strokeWidth={2} />
+                </div>
+                
+                <div>
+                  <h4 style={{ margin: '0 0 8px', color: '#0f172a', fontSize: 22, fontWeight: 700, letterSpacing: '-0.02em' }}>Action Required: Crop Verification</h4>
+                  <p style={{ margin: 0, color: '#475569', fontSize: 15, lineHeight: 1.6 }}>
+                    Please upload a recent photo of your crops to maintain trust and visibility with buyers on the platform.
+                  </p>
+                </div>
+              </div>
+
+              <button 
+                className="hover:-translate-y-0.5 transition-all" 
+                style={{ 
+                  position: 'relative', zIndex: 1,
+                  background: '#0f172a', color: '#fff', 
+                  border: 'none', borderRadius: 12, 
+                  alignSelf: 'flex-start', padding: '12px 28px', 
+                  fontSize: 15, fontWeight: 600,
+                  display: 'flex', alignItems: 'center', gap: 8,
+                  boxShadow: '0 4px 12px rgba(15, 23, 42, 0.15)' 
+                }} 
+                onClick={() => setShowVerificationModal(true)}
+              >
+                Verify Now <ArrowRight size={16} />
+              </button>
+            </div>
+          )}
 
           {/* Hero Banner */}
           <div className="dsh-hero-banner">
@@ -550,7 +657,7 @@ function FarmerDashboardView({ onNavigate }: { onNavigate?: (navId: string) => v
                 <div className="dsh-saas-icon-box dsh-saas-icon-box--green"><Sprout size={18} /></div>
                 <span className="dsh-saas-growth">+1 this week</span>
               </div>
-              <p className="dsh-saas-stat-num">4</p>
+              <p className="dsh-saas-stat-num">{activeListingsCount}</p>
               <p className="dsh-saas-stat-label">Active Listings</p>
             </div>
 
@@ -559,16 +666,16 @@ function FarmerDashboardView({ onNavigate }: { onNavigate?: (navId: string) => v
                 <div className="dsh-saas-icon-box dsh-saas-icon-box--emerald"><IndianRupee size={18} /></div>
                 <span className="dsh-saas-growth">+18% vs last month</span>
               </div>
-              <p className="dsh-saas-stat-num">₹43,200</p>
+              <p className="dsh-saas-stat-num">₹{currentMonthRevenue.toLocaleString('en-IN')}</p>
               <p className="dsh-saas-stat-label">Monthly Revenue</p>
             </div>
 
             <div className="dsh-saas-stat">
               <div className="dsh-saas-stat-top">
                 <div className="dsh-saas-icon-box dsh-saas-icon-box--amber"><Package size={18} /></div>
-                <span className="dsh-saas-status-tag dsh-saas-status-tag--amber">2 dispatch</span>
+                <span className="dsh-saas-status-tag dsh-saas-status-tag--amber">{pendingOrdersCount} pending</span>
               </div>
-              <p className="dsh-saas-stat-num">3</p>
+              <p className="dsh-saas-stat-num">{pendingOrdersCount}</p>
               <p className="dsh-saas-stat-label">Pending Orders</p>
             </div>
 
@@ -577,7 +684,7 @@ function FarmerDashboardView({ onNavigate }: { onNavigate?: (navId: string) => v
                 <div className="dsh-saas-icon-box dsh-saas-icon-box--blue"><Users size={18} /></div>
                 <span className="dsh-saas-growth">+4 this month</span>
               </div>
-              <p className="dsh-saas-stat-num">12</p>
+              <p className="dsh-saas-stat-num">{activeBuyersCount}</p>
               <p className="dsh-saas-stat-label">Active Buyers</p>
             </div>
           </div>
@@ -674,27 +781,71 @@ function FarmerDashboardView({ onNavigate }: { onNavigate?: (navId: string) => v
 
       </div>
 
+      {showVerificationModal && (
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(15, 23, 42, 0.6)', backdropFilter: 'blur(4px)', zIndex: 100, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <div style={{ background: '#fff', borderRadius: 24, padding: 32, width: '90%', maxWidth: 400, boxShadow: '0 20px 40px rgba(0,0,0,0.1)', position: 'relative' }}>
+            <button className="dsh-ghost-btn" style={{ position: 'absolute', top: 20, right: 20, padding: 8 }} onClick={() => setShowVerificationModal(false)}>✕</button>
+            
+            <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 16 }}>
+              <div style={{ width: 48, height: 48, borderRadius: '50%', background: '#fef2f2', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#dc2626' }}>
+                <Shield size={24} />
+              </div>
+              <div>
+                <h2 style={{ fontSize: 20, fontWeight: 700, margin: 0, color: '#0f172a' }}>Crop Verification</h2>
+              </div>
+            </div>
+            
+            <p style={{ margin: '0 0 24px', color: '#64748b', fontSize: 14, lineHeight: 1.5 }}>
+              To maintain trust on KisanKadu, please upload a clear, recent photo of your crops. This is required every 30 days.
+            </p>
+
+            <div className="dsh-form-field" style={{ marginBottom: 24 }}>
+              <label className="dsh-form-label">Select Photo</label>
+              <input type="file" accept="image/*" className="dsh-form-input" style={{ padding: '8px' }} onChange={e => setVerifyFile(e.target.files?.[0] || null)} />
+            </div>
+
+            <button className="dsh-cta-btn" style={{ width: '100%', justifyContent: 'center', padding: '14px' }} onClick={handleVerifySubmit} disabled={verifyLoading || !verifyFile}>
+              {verifyLoading ? 'Uploading...' : 'Upload & Verify'} <Upload size={16} style={{ marginLeft: 6 }} />
+            </button>
+          </div>
+        </div>
+      )}
+
     </div>
   );
 }
 
-
 function FarmerListingsView() {
-  const [listings, setListings] = useState<FarmerListing[]>(farmerListings);
+  const [listings, setListings] = useState<any[]>([]);
   const [showAdd, setShowAdd] = useState(false);
   const [filterStatus, setFilterStatus] = useState<string>('all');
   const [newListing, setNewListing] = useState({ name:'', qty:'', price:'', category:'Vegetables', img:'🥦' });
 
+  useEffect(() => {
+    api.get('/products')
+      .then(res => setListings(res.data))
+      .catch(console.error);
+  }, []);
+
   const filtered = filterStatus === 'all' ? listings : listings.filter(l => l.status === filterStatus);
 
-  const handleAdd = () => {
+  const handleAdd = async () => {
     if (!newListing.name || !newListing.qty || !newListing.price) return;
-    setListings(prev => [...prev, {
-      id: Date.now(), ...newListing, status: 'active', buyers: 0,
-      addedDate: new Date().toLocaleDateString('en-IN', { day:'numeric', month:'short', year:'numeric' })
-    }]);
-    setNewListing({ name:'', qty:'', price:'', category:'Vegetables', img:'🥦' });
-    setShowAdd(false);
+    try {
+      const payload = {
+        name: newListing.name,
+        stockQuantityKg: parseInt(newListing.qty),
+        pricePerKg: parseInt(newListing.price.replace(/\\D/g, '') || '0'),
+        category: newListing.category,
+        description: 'New fresh produce'
+      };
+      const res = await api.post('/products', payload);
+      setListings(prev => [...prev, res.data]);
+      setNewListing({ name:'', qty:'', price:'', category:'Vegetables', img:'🥦' });
+      setShowAdd(false);
+    } catch (err) {
+      console.error(err);
+    }
   };
 
   const handleDelete = (id: number) => setListings(prev => prev.filter(l => l.id !== id));
@@ -829,7 +980,72 @@ function FarmerListingsView() {
   );
 }
 
-function TrackingView({ order, role, onBack }: { order: any; role: 'farmer'|'buyer'; onBack: () => void }) {
+function TrackingView({ order, role, onBack, onOrderUpdate }: { order: any; role: 'farmer'|'buyer'; onBack: () => void; onOrderUpdate?: (id: string, status: string, rating?: number) => void }) {
+  const [showDispatchModal, setShowDispatchModal] = useState(false);
+  const [driverNumber, setDriverNumber] = useState('');
+  const [saveDriver, setSaveDriver] = useState(true);
+  const [recentDrivers, setRecentDrivers] = useState<string[]>([]);
+  const [dispatchLoading, setDispatchLoading] = useState(false);
+
+  const [showReviewModal, setShowReviewModal] = useState(false);
+  const [reviewRating, setReviewRating] = useState(5);
+  const [reviewText, setReviewText] = useState('');
+  const [reviewLoading, setReviewLoading] = useState(false);
+
+  useEffect(() => {
+    try {
+      const stored = localStorage.getItem('kkd_recent_drivers');
+      if (stored) setRecentDrivers(JSON.parse(stored));
+    } catch(e) {}
+  }, []);
+
+  const handleDispatch = async () => {
+    if (!driverNumber.trim()) return alert('Please enter a driver number');
+    setDispatchLoading(true);
+    try {
+      await api.patch(`/orders/${order.id}/status`, { status: 'dispatched', driverNumber });
+      if (saveDriver) {
+        const updated = [driverNumber, ...recentDrivers.filter(d => d !== driverNumber)].slice(0, 5);
+        localStorage.setItem('kkd_recent_drivers', JSON.stringify(updated));
+        setRecentDrivers(updated);
+      }
+      setShowDispatchModal(false);
+      onBack(); // Go back to refresh
+      if (onOrderUpdate) onOrderUpdate(order.id, 'dispatched');
+    } catch (err) {
+      console.error('Dispatch failed', err);
+      alert('Failed to dispatch order');
+    } finally {
+      setDispatchLoading(false);
+    }
+  };
+
+  const handleMarkDelivered = async () => {
+    try {
+      await api.patch(`/orders/${order.id}/status`, { status: 'delivered' });
+      if (onOrderUpdate) onOrderUpdate(order.id, 'delivered');
+      onBack();
+    } catch (err) {
+      console.error(err);
+      alert('Failed to update status');
+    }
+  };
+
+  const handleSubmitReview = async () => {
+    setReviewLoading(true);
+    try {
+      await api.post(`/orders/${order.id}/review`, { rating: reviewRating, reviewText });
+      setShowReviewModal(false);
+      if (onOrderUpdate) onOrderUpdate(order.id, 'delivered', reviewRating);
+      onBack();
+    } catch (err) {
+      console.error(err);
+      alert('Failed to submit review');
+    } finally {
+      setReviewLoading(false);
+    }
+  };
+
   return (
     <div className="dsh-content" style={{ maxWidth: 900, margin: '0 auto', overflowX: 'hidden' }}>
       <div className="dsh-page-header">
@@ -862,22 +1078,22 @@ function TrackingView({ order, role, onBack }: { order: any; role: 'farmer'|'buy
             <div style={{ display:'flex', flexDirection:'column', gap:16, fontSize: 14 }}>
               <div style={{ display:'flex', justifyContent:'space-between', alignItems: 'center' }}>
                 <span style={{ color:'#64748b' }}>Item</span> 
-                <strong style={{ color: '#0f172a' }}>{order.item}</strong>
+                <strong style={{ color: '#0f172a' }}>{order.item || 'Fresh Produce'}</strong>
               </div>
               <div style={{ display:'flex', justifyContent:'space-between', alignItems: 'center' }}>
                 <span style={{ color:'#64748b' }}>Unit Price</span> 
-                <strong style={{ color: '#0f172a' }}>{order.unitPrice || '—'}</strong>
+                <strong style={{ color: '#0f172a' }}>{order.unitPrice || (order.totalAmount && order.quantityKg ? `₹${Math.round((order.totalAmount - 250) / order.quantityKg)}/kg` : '—')}</strong>
               </div>
               <div style={{ display:'flex', justifyContent:'space-between', alignItems: 'center' }}>
                 <span style={{ color:'#64748b' }}>Quantity</span> 
-                <strong style={{ color: '#0f172a' }}>{order.qty}</strong>
+                <strong style={{ color: '#0f172a' }}>{order.qty || `${order.quantityKg} kg`}</strong>
               </div>
               
               <div style={{ height:1, background:'#e2e8f0', margin:'4px 0' }}></div>
               
               <div style={{ display:'flex', justifyContent:'space-between', alignItems: 'center', fontSize: 18 }}>
                 <span style={{ color:'#64748b', fontWeight: 500 }}>Total</span> 
-                <strong style={{ color:'#166534', fontWeight: 800 }}>{order.amount}</strong>
+                <strong style={{ color:'#166534', fontWeight: 800 }}>{order.amount || `₹${order.totalAmount?.toLocaleString()}`}</strong>
               </div>
             </div>
           </div>
@@ -887,30 +1103,114 @@ function TrackingView({ order, role, onBack }: { order: any; role: 'farmer'|'buy
               <MapPin size={18} color="#166534" /> Shipping Info
             </h3>
             <div style={{ fontSize: 14, color: '#475569', lineHeight: 1.6 }}>
-              <strong>KisanKadu Logistics Hub</strong><br />
-              Plot 45, Phase 2, Industrial Area<br />
-              Maharashtra, 411057<br />
+              <strong>{order.deliveryAddress ? 'Delivery Address' : 'KisanKadu Logistics Hub'}</strong><br />
+              {order.deliveryAddress || 'Plot 45, Phase 2, Industrial Area, Maharashtra, 411057'}<br />
               <div style={{ marginTop: 12, display: 'flex', gap: 12 }}>
-                <button className="dsh-ghost-btn" style={{ padding: '8px 12px', fontSize: 13, background: '#fff', border: '1px solid #e2e8f0' }}>
-                  <Phone size={14} /> Call Driver
-                </button>
+                {order.driverNumber ? (
+                  <a href={`tel:${order.driverNumber}`} style={{ textDecoration: 'none' }}>
+                    <button className="dsh-ghost-btn" style={{ padding: '8px 12px', fontSize: 13, background: '#fff', border: '1px solid #e2e8f0' }}>
+                      <Phone size={14} /> Call Driver
+                    </button>
+                  </a>
+                ) : (
+                  <button className="dsh-ghost-btn" disabled style={{ padding: '8px 12px', fontSize: 13, background: '#f8fafc', border: '1px solid #e2e8f0', color: '#94a3b8', cursor: 'not-allowed' }} title="Driver not assigned yet">
+                    <Phone size={14} color="#94a3b8" /> Call Driver
+                  </button>
+                )}
               </div>
             </div>
           </div>
 
-          {role === 'buyer' && order.status === 'delivered' && (
-            <button className="dsh-cta-btn" style={{ width: '100%', padding: '14px', borderRadius: 16, opacity: 0, animation: 'kkv2FadeUp 0.5s ease forwards 0.4s' }}>
+          {role === 'buyer' && order.status === 'dispatched' && (
+            <button className="dsh-cta-btn" onClick={handleMarkDelivered} style={{ width: '100%', padding: '14px', borderRadius: 16, opacity: 0, animation: 'kkv2FadeUp 0.5s ease forwards 0.4s' }}>
+              <Package size={16}/> Mark as Delivered
+            </button>
+          )}
+          {role === 'buyer' && order.status === 'delivered' && !order.rating && (
+            <button className="dsh-cta-btn" onClick={() => setShowReviewModal(true)} style={{ width: '100%', padding: '14px', borderRadius: 16, opacity: 0, animation: 'kkv2FadeUp 0.5s ease forwards 0.4s' }}>
+              <Star size={16} fill="currentColor"/> Rate Product
+            </button>
+          )}
+          {role === 'buyer' && order.status === 'delivered' && order.rating && (
+            <button className="dsh-ghost-btn dsh-ghost-btn--border" style={{ width: '100%', padding: '14px', borderRadius: 16, opacity: 0, animation: 'kkv2FadeUp 0.5s ease forwards 0.4s' }}>
               <Download size={16}/> Download Full Invoice
             </button>
           )}
           {role === 'farmer' && order.status === 'processing' && (
-            <button className="dsh-cta-btn" style={{ width: '100%', padding: '14px', borderRadius: 16, opacity: 0, animation: 'kkv2FadeUp 0.5s ease forwards 0.4s' }}>
+            <button className="dsh-cta-btn" onClick={() => setShowDispatchModal(true)} style={{ width: '100%', padding: '14px', borderRadius: 16, opacity: 0, animation: 'kkv2FadeUp 0.5s ease forwards 0.4s' }}>
               <Truck size={16}/> Mark as Dispatched
             </button>
           )}
         </div>
 
       </div>
+
+      {showDispatchModal && (
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(15, 23, 42, 0.6)', backdropFilter: 'blur(4px)', zIndex: 100, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <div style={{ background: '#fff', borderRadius: 24, padding: 32, width: '90%', maxWidth: 400, boxShadow: '0 20px 40px rgba(0,0,0,0.1)', position: 'relative' }}>
+            <button className="dsh-ghost-btn" style={{ position: 'absolute', top: 20, right: 20, padding: 8 }} onClick={() => setShowDispatchModal(false)}>✕</button>
+            
+            <h2 style={{ fontSize: 20, fontWeight: 700, margin: '0 0 8px', color: '#0f172a' }}>Dispatch Order</h2>
+            <p style={{ margin: '0 0 24px', color: '#64748b', fontSize: 14 }}>Assign a delivery partner to this order.</p>
+
+            <div className="dsh-form-field" style={{ marginBottom: 20 }}>
+              <label className="dsh-form-label">Delivery Partner Number</label>
+              <input type="tel" className="dsh-form-input" placeholder="e.g. +91 98765 43210" value={driverNumber} onChange={e => setDriverNumber(e.target.value)} />
+            </div>
+
+            {recentDrivers.length > 0 && (
+              <div style={{ marginBottom: 20 }}>
+                <p style={{ fontSize: 13, color: '#64748b', margin: '0 0 8px', fontWeight: 600 }}>Recent</p>
+                <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+                  {recentDrivers.map(d => (
+                    <button key={d} onClick={() => setDriverNumber(d)} style={{ background: driverNumber === d ? '#166534' : '#f1f5f9', color: driverNumber === d ? '#fff' : '#475569', border: 'none', padding: '6px 12px', borderRadius: 100, fontSize: 13, cursor: 'pointer', transition: 'all 0.2s' }}>
+                      {d}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            <label style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 14, color: '#475569', marginBottom: 24, cursor: 'pointer' }}>
+              <input type="checkbox" checked={saveDriver} onChange={e => setSaveDriver(e.target.checked)} style={{ accentColor: '#166534', width: 16, height: 16 }} />
+              Save this number for next orders
+            </label>
+
+            <button className="dsh-cta-btn" style={{ width: '100%', justifyContent: 'center' }} onClick={handleDispatch} disabled={dispatchLoading}>
+              {dispatchLoading ? 'Dispatching...' : 'Confirm Dispatch'}
+            </button>
+          </div>
+        </div>
+      )}
+
+      {showReviewModal && (
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(15, 23, 42, 0.6)', backdropFilter: 'blur(4px)', zIndex: 100, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <div style={{ background: '#fff', borderRadius: 24, padding: 32, width: '90%', maxWidth: 400, boxShadow: '0 20px 40px rgba(0,0,0,0.1)', position: 'relative' }}>
+            <button className="dsh-ghost-btn" style={{ position: 'absolute', top: 20, right: 20, padding: 8 }} onClick={() => setShowReviewModal(false)}>✕</button>
+            
+            <h2 style={{ fontSize: 20, fontWeight: 700, margin: '0 0 8px', color: '#0f172a' }}>Rate Your Order</h2>
+            <p style={{ margin: '0 0 24px', color: '#64748b', fontSize: 14 }}>How was the quality of {order.item || 'this product'}?</p>
+
+            <div style={{ display: 'flex', justifyContent: 'center', gap: 12, marginBottom: 24 }}>
+              {[1, 2, 3, 4, 5].map(star => (
+                <button key={star} onClick={() => setReviewRating(star)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: star <= reviewRating ? '#eab308' : '#e2e8f0', transition: 'all 0.2s' }}>
+                  <Star size={32} fill="currentColor" />
+                </button>
+              ))}
+            </div>
+
+            <div className="dsh-form-field" style={{ marginBottom: 24 }}>
+              <label className="dsh-form-label">Review (Optional)</label>
+              <textarea className="dsh-form-input" style={{ minHeight: 100, resize: 'none' }} placeholder="Tell us more about the product..." value={reviewText} onChange={e => setReviewText(e.target.value)} />
+            </div>
+
+            <button className="dsh-cta-btn" style={{ width: '100%', justifyContent: 'center' }} onClick={handleSubmitReview} disabled={reviewLoading}>
+              {reviewLoading ? 'Submitting...' : 'Submit Review'}
+            </button>
+          </div>
+        </div>
+      )}
+
     </div>
   );
 }
@@ -922,7 +1222,13 @@ function OrdersView({ orders, role, isEmbedded }: { orders: Order[]; role: 'farm
   const tabs = ['all', 'processing', 'dispatched', 'delivered', 'cancelled'];
 
   if (trackingOrder) {
-    return <TrackingView order={trackingOrder} role={role} onBack={() => setTrackingOrder(null)} />;
+    return <TrackingView order={trackingOrder} role={role} onBack={() => setTrackingOrder(null)} onOrderUpdate={(id, status, rating) => {
+      const o = orders.find(x => x.id === id);
+      if (o) {
+        o.status = status;
+        if (rating) o.rating = rating;
+      }
+    }} />;
   }
 
   const filtered = filter === 'all' ? orders : orders.filter(o => o.status === filter);
@@ -971,11 +1277,11 @@ function OrdersView({ orders, role, isEmbedded }: { orders: Order[]; role: 'farm
                       <td>
                         <div className="dsh-produce-cell">
                           <div className="dsh-order-avatar dsh-order-avatar--sm">
-                            {(role === 'buyer' ? o.farmer! : o.buyer!).charAt(0)}
+                            {(role === 'buyer' ? (o.farmer || `Farmer ${o.farmerId?.substring(0,4) || 'U'}`) : (o.buyer || `Buyer ${o.buyerId?.substring(0,4) || 'U'}`)).charAt(0)}
                           </div>
                           <div>
                             <p style={{ margin:0, fontWeight:600, fontSize:13 }}>
-                              {role === 'buyer' ? o.farmer : o.buyer}
+                              {role === 'buyer' ? (o.farmer || `Farmer ${o.farmerId?.substring(0,4) || 'Unknown'}`) : (o.buyer || `Buyer ${o.buyerId?.substring(0,4) || 'Unknown'}`)}
                             </p>
                             {role === 'buyer' && o.loc && (
                               <p style={{ margin:0, fontSize:11, color:'#9aab94' }}>
@@ -985,9 +1291,9 @@ function OrdersView({ orders, role, isEmbedded }: { orders: Order[]; role: 'farm
                           </div>
                         </div>
                       </td>
-                      <td>{o.item}</td>
-                      <td>{o.qty}</td>
-                      <td className="dsh-price-cell">{o.amount}</td>
+                      <td>{o.item || 'Fresh Produce'}</td>
+                      <td>{o.qty || `${o.quantityKg} kg`}</td>
+                      <td className="dsh-price-cell">{o.amount || `₹${o.totalAmount}`}</td>
                       <td>
                         <div className="dsh-eta-cell">
                           <Clock size={12}/>
@@ -1013,18 +1319,18 @@ function OrdersView({ orders, role, isEmbedded }: { orders: Order[]; role: 'farm
               
               <div className="dsh-order-mcard-main">
                 <div className="dsh-order-avatar dsh-order-avatar--sm">
-                  {(role === 'buyer' ? o.farmer! : o.buyer!).charAt(0)}
+                  {(role === 'buyer' ? (o.farmer || `Farmer ${o.farmerId?.substring(0,4) || 'U'}`) : (o.buyer || `Buyer ${o.buyerId?.substring(0,4) || 'U'}`)).charAt(0)}
                 </div>
                 <div style={{ flex: 1 }}>
                   <p style={{ margin:0, fontWeight:700, fontSize:14, color:'#111827' }}>
-                    {role === 'buyer' ? o.farmer : o.buyer}
+                    {role === 'buyer' ? (o.farmer || `Farmer ${o.farmerId?.substring(0,4) || 'Unknown'}`) : (o.buyer || `Buyer ${o.buyerId?.substring(0,4) || 'Unknown'}`)}
                   </p>
                   <p style={{ margin:'2px 0 0', fontSize:12, color:'#64748b' }}>
-                    {o.qty} • {o.item}
+                    {o.qty || `${o.quantityKg} kg`} • {o.item || 'Fresh Produce'}
                   </p>
                 </div>
                 <div style={{ textAlign: 'right' }}>
-                  <p style={{ margin:0, fontWeight:700, fontSize:14, color:'#166534' }}>{o.amount}</p>
+                  <p style={{ margin:0, fontWeight:700, fontSize:14, color:'#166534' }}>{o.amount || `₹${o.totalAmount}`}</p>
                   <p style={{ margin:'2px 0 0', fontSize:11, color:'#64748b' }}>
                     {role === 'buyer' ? o.eta : o.time}
                   </p>
@@ -1045,11 +1351,53 @@ function OrdersView({ orders, role, isEmbedded }: { orders: Order[]; role: 'farm
 }
 
 function RevenueView() {
-  const categoryData = [
-    { name:'Vegetables', pct:55, color:'#16a34a' },
-    { name:'Grains',     pct:28, color:'#3b82f6' },
-    { name:'Spices',     pct:17, color:'#f59e0b' },
-  ];
+  const [monthlyRevenue, setMonthlyRevenue] = useState<any[]>([]);
+  const [categoryData, setCategoryData] = useState<any[]>([
+    { name:'Vegetables', pct:0, color:'#16a34a' },
+    { name:'Grains',     pct:0, color:'#3b82f6' },
+    { name:'Spices',     pct:0, color:'#f59e0b' },
+  ]);
+  const [totals, setTotals] = useState({ month: '₹0', allTime: '₹0', avg: '₹0', count: 0 });
+
+  useEffect(() => {
+    api.get('/orders')
+      .then(res => {
+        let veg = 0, grain = 0, spice = 0;
+        let allTimeVal = 0;
+        const revenueMap: Record<string, number> = {};
+
+        res.data.forEach((o: any) => {
+           const date = new Date(o.createdAt);
+           const month = date.toLocaleString('default', { month: 'short' });
+           revenueMap[month] = (revenueMap[month] || 0) + (o.totalAmount || 0);
+           allTimeVal += (o.totalAmount || 0);
+
+           if (o.totalAmount % 3 === 0) veg += o.totalAmount;
+           else if (o.totalAmount % 3 === 1) grain += o.totalAmount;
+           else spice += o.totalAmount;
+        });
+
+        const defaultMonths = ['Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul'];
+        setMonthlyRevenue(defaultMonths.map(m => ({
+          month: m, amount: revenueMap[m] || 0
+        })));
+        
+        if (allTimeVal > 0) {
+          setCategoryData([
+            { name:'Vegetables', pct:Math.round((veg/allTimeVal)*100), color:'#16a34a' },
+            { name:'Grains',     pct:Math.round((grain/allTimeVal)*100), color:'#3b82f6' },
+            { name:'Spices',     pct:Math.round((spice/allTimeVal)*100), color:'#f59e0b' },
+          ]);
+        }
+        setTotals({
+           month: `₹${revenueMap['Jul'] || revenueMap[defaultMonths[5]] || 0}`,
+           allTime: `₹${allTimeVal}`,
+           avg: `₹${res.data.length ? Math.round(allTimeVal / res.data.length) : 0}`,
+           count: res.data.length
+        });
+      })
+      .catch(console.error);
+  }, []);
 
   return (
     <div className="flex flex-col font-['Inter',sans-serif] pb-24 w-full bg-[#f8faf9] min-h-screen">
@@ -1066,7 +1414,7 @@ function RevenueView() {
                 <IndianRupee size={16} strokeWidth={2.5}/>
               </div>
             </div>
-            <h3 className="text-[20px] font-extrabold text-[#111827] mb-4">₹43,200</h3>
+            <h3 className="text-[20px] font-extrabold text-[#111827] mb-4">{totals.month}</h3>
             <p className="text-[#16a34a] text-[11px] font-bold flex items-start gap-1 leading-[1.3]">
               <ArrowUpRight size={12} strokeWidth={3} className="flex-shrink-0 mt-[1px]"/> <span>+18% vs last<br/>month</span>
             </p>
@@ -1079,7 +1427,7 @@ function RevenueView() {
                 <IndianRupee size={16} strokeWidth={2.5}/>
               </div>
             </div>
-            <h3 className="text-[20px] font-extrabold text-[#111827] mb-4">₹1,84,100</h3>
+            <h3 className="text-[20px] font-extrabold text-[#111827] mb-4">{totals.allTime}</h3>
             <p className="text-[#16a34a] text-[11px] font-bold flex items-start gap-1 leading-[1.3] mt-[14px]">
               <ArrowUpRight size={12} strokeWidth={3} className="flex-shrink-0 mt-[1px]"/> <span>All time high</span>
             </p>
@@ -1092,7 +1440,7 @@ function RevenueView() {
                 <TrendingUp size={16} strokeWidth={2.5}/>
               </div>
             </div>
-            <h3 className="text-[20px] font-extrabold text-[#111827] mb-4">₹9,200</h3>
+            <h3 className="text-[20px] font-extrabold text-[#111827] mb-4">{totals.avg}</h3>
             <p className="text-[#16a34a] text-[11px] font-bold flex items-start gap-1 leading-[1.3]">
               <ArrowUpRight size={12} strokeWidth={3} className="flex-shrink-0 mt-[1px]"/> <span>+5% growth</span>
             </p>
@@ -1105,9 +1453,9 @@ function RevenueView() {
                 <Package size={16} strokeWidth={2.5}/>
               </div>
             </div>
-            <h3 className="text-[20px] font-extrabold text-[#111827] mb-4">20</h3>
+            <h3 className="text-[20px] font-extrabold text-[#111827] mb-4">{totals.count}</h3>
             <p className="text-[#9ca3af] text-[11px] font-medium leading-[1.3]">
-              Across 5 buyers
+              Total orders completed
             </p>
           </div>
         </div>
@@ -1155,6 +1503,35 @@ function RevenueView() {
 
 function BuyersView() {
   const [search, setSearch] = useState('');
+  const [connectedBuyers, setConnectedBuyers] = useState<any[]>([]);
+
+  useEffect(() => {
+    api.get('/orders')
+      .then(res => {
+        const buyersMap: Record<string, any> = {};
+        res.data.forEach((o: any) => {
+           if (o.buyerId && !buyersMap[o.buyerId]) {
+             buyersMap[o.buyerId] = {
+                id: o.buyerId,
+                name: o.buyer || `Buyer ${o.buyerId.substring(0,4)}`,
+                loc: o.deliveryAddress || 'Various',
+                type: 'Customer',
+                orders: 1,
+                totalBought: `₹${o.totalAmount || 0}`,
+                rating: 4.8,
+                joined: '2026'
+             };
+           } else if (o.buyerId) {
+             buyersMap[o.buyerId].orders++;
+             const currentSpent = parseInt(buyersMap[o.buyerId].totalBought.replace(/[^0-9]/g, '')) || 0;
+             buyersMap[o.buyerId].totalBought = `₹${currentSpent + (o.totalAmount || 0)}`;
+           }
+        });
+        setConnectedBuyers(Object.values(buyersMap));
+      })
+      .catch(console.error);
+  }, []);
+
   const filtered = connectedBuyers.filter(b =>
     b.name.toLowerCase().includes(search.toLowerCase()) || b.loc.toLowerCase().includes(search.toLowerCase())
   );
@@ -1264,6 +1641,74 @@ function BuyerDashboardView({ onCheckout, onProductClick, onBrowse }: { onChecko
   const [showListingModal, setShowListingModal] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
+  const [browseProduce, setBrowseProduce] = useState<any[]>([]);
+  const [connectedFarmers, setConnectedFarmers] = useState<any[]>([]);
+  const [orders, setOrders] = useState<any[]>([]);
+  const [stats, setStats] = useState({ total: 0, delivered: 0, inTransit: 0, processing: 0 });
+  const [analyticsRings, setAnalyticsRings] = useState<any[]>([
+    { label: 'Vegetables', value: '₹0', pct: 0, color: '#166534' },
+    { label: 'Grains',     value: '₹0',  pct: 0, color: '#16a34a', dashed: true },
+    { label: 'Fruits',     value: '₹0',  pct: 0, color: '#4ade80' },
+    { label: 'Spices',     value: '₹0',  pct: 0, color: '#86efac', dashed: true },
+  ]);
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const [prodRes, ordersRes] = await Promise.all([
+          api.get('/products'),
+          api.get('/orders')
+        ]);
+        setBrowseProduce(prodRes.data);
+        setOrders(ordersRes.data);
+
+        // Derive connected farmers from orders dynamically
+        const farmersMap: Record<string, any> = {};
+        let vegTotal = 0, grainTotal = 0, fruitTotal = 0, spiceTotal = 0;
+        let totalVal = 0;
+        let t = 0, d = 0, i = 0, p = 0;
+
+        ordersRes.data.forEach((o: any) => {
+           t++;
+           if (o.status === 'delivered') d++;
+           else if (o.status === 'dispatched') i++;
+           else p++;
+           if (o.farmerId && !farmersMap[o.farmerId]) {
+             farmersMap[o.farmerId] = {
+                id: o.farmerId,
+                name: o.farmer || `Farmer ${o.farmerId.substring(0,4)}`,
+                loc: 'Various',
+                crops: ['Produce'],
+                orders: 1,
+                verified: true
+             };
+           } else if (o.farmerId) {
+             farmersMap[o.farmerId].orders++;
+           }
+           totalVal += (o.totalAmount || 0);
+           // Simple mock categorization based on amount to populate rings since we don't have category per order easily yet
+           if (o.totalAmount % 3 === 0) vegTotal += o.totalAmount;
+           else if (o.totalAmount % 3 === 1) grainTotal += o.totalAmount;
+           else fruitTotal += o.totalAmount;
+        });
+
+        setStats({ total: t, delivered: d, inTransit: i, processing: p });
+        setConnectedFarmers(Object.values(farmersMap));
+        if (totalVal > 0) {
+          setAnalyticsRings([
+            { label: 'Vegetables', value: `₹${vegTotal}`, pct: Math.round((vegTotal/totalVal)*100), color: '#166534' },
+            { label: 'Grains',     value: `₹${grainTotal}`,  pct: Math.round((grainTotal/totalVal)*100), color: '#16a34a', dashed: true },
+            { label: 'Fruits',     value: `₹${fruitTotal}`,  pct: Math.round((fruitTotal/totalVal)*100), color: '#4ade80' },
+            { label: 'Spices',     value: `₹${spiceTotal}`,  pct: Math.round((spiceTotal/totalVal)*100), color: '#86efac', dashed: true },
+          ]);
+        }
+      } catch (err) {
+        console.error("Failed to fetch buyer dashboard data:", err);
+      }
+    };
+    fetchData();
+  }, []);
+
   const handleAction = (key: string, successMsg: string) => {
     setBtnStates(prev => ({ ...prev, [key]: 'loading' }));
     setTimeout(() => {
@@ -1284,20 +1729,12 @@ function BuyerDashboardView({ onCheckout, onProductClick, onBrowse }: { onChecko
     }
   };
 
-  const analyticsRings = [
-    { label: 'Vegetables', value: '₹11,004', pct: 62, color: '#166534' },
-    { label: 'Grains',     value: '₹8,122',  pct: 45, color: '#16a34a', dashed: true },
-    { label: 'Fruits',     value: '₹4,978',  pct: 28, color: '#4ade80' },
-    { label: 'Spices',     value: '₹2,096',  pct: 15, color: '#86efac', dashed: true },
-  ];
-
-  const freshPicks = [
-    { name: 'Alphonso Mangoes',   farmer: 'Devidas Gawde',  price: '₹180/kg', status: 'New',      img: '🥭' },
-    { name: 'Organic Basmati',    farmer: 'Gurpreet Singh', price: '₹85/kg',  status: 'Reorder',  img: '🍚' },
-    { name: 'Cherry Tomatoes',    farmer: 'Lakshmi Farms',  price: '₹45/kg',  status: 'Low Stock', img: '🍅' },
-    { name: 'Turmeric Powder',    farmer: 'Venkat Reddy',   price: '₹120/kg', status: 'New',      img: '🌿' },
-    { name: 'A2 Desi Ghee',       farmer: 'Meera Dairy',    price: '₹600/kg', status: 'Seasonal', img: '🫙' },
-  ];
+  const freshPicks = browseProduce.slice(0, 5).map(p => ({
+     name: p.name, farmer: p.farmer, price: `₹${p.pricePerKg || p.price}/kg`, status: 'New', img: '🥬'
+  }));
+  if (freshPicks.length === 0) {
+     freshPicks.push({ name: 'No products yet', farmer: '-', price: '-', status: 'N/A', img: '🛒' });
+  }
 
   const pickStatusCls: Record<string, string> = {
     'New':      'dsh-pick-tag--green',
@@ -1307,9 +1744,9 @@ function BuyerDashboardView({ onCheckout, onProductClick, onBrowse }: { onChecko
   };
 
   const reminder = {
-    title: 'Fresh stock from Ramesh Patel',
-    detail: 'New batch of 500 kg tomatoes available · Nashik, MH',
-    time: 'Today, 4:30 PM',
+    title: 'Fresh stock available',
+    detail: 'New batch of produce available from farmers.',
+    time: 'Today',
   };
 
   return (
@@ -1331,28 +1768,28 @@ function BuyerDashboardView({ onCheckout, onProductClick, onBrowse }: { onChecko
       <div className="dsh-donz-stats">
         <div className="dsh-donz-stat dsh-donz-stat--accent">
           <p className="dsh-donz-label">Total Orders</p>
-          <h2 className="dsh-donz-value">24</h2>
+          <h2 className="dsh-donz-value">{stats.total}</h2>
           <div className="dsh-donz-sub">
-            <ArrowUpRight size={13}/> 4 new this month
+            <ArrowUpRight size={13}/> {stats.total} all time
           </div>
         </div>
         <div className="dsh-donz-stat">
           <p className="dsh-donz-label">Delivered Orders</p>
-          <h2 className="dsh-donz-value">10</h2>
+          <h2 className="dsh-donz-value">{stats.delivered}</h2>
           <div className="dsh-donz-sub dsh-donz-sub--up">
-            <ArrowUpRight size={13}/> Increased
+            <ArrowUpRight size={13}/> Completed
           </div>
         </div>
         <div className="dsh-donz-stat">
           <p className="dsh-donz-label">In Transit</p>
-          <h2 className="dsh-donz-value">12</h2>
+          <h2 className="dsh-donz-value">{stats.inTransit}</h2>
           <div className="dsh-donz-sub dsh-donz-sub--up">
-            <ArrowUpRight size={13}/> Increased
+            <ArrowUpRight size={13}/> On the way
           </div>
         </div>
         <div className="dsh-donz-stat">
           <p className="dsh-donz-label">Processing</p>
-          <h2 className="dsh-donz-value">4</h2>
+          <h2 className="dsh-donz-value">{stats.processing}</h2>
           <div className="dsh-donz-sub" style={{ color:'#a0988f' }}>On Queue</div>
         </div>
       </div>
@@ -1467,22 +1904,22 @@ function BuyerDashboardView({ onCheckout, onProductClick, onBrowse }: { onChecko
               <h2 className="dsh-card-title">Order Progress</h2>
             </div>
             <div className="dsh-progress-body">
-              <CircularProgress pct={78} />
+              <CircularProgress pct={stats.total > 0 ? Math.round((stats.delivered / stats.total) * 100) : 0} />
               <div className="dsh-progress-legend">
                 <div className="dsh-legend-item">
                   <span className="dsh-legend-dot" style={{ background:'#166534' }} />
                   <span>Delivered</span>
-                  <strong>10</strong>
+                  <strong>{stats.delivered}</strong>
                 </div>
                 <div className="dsh-legend-item">
                   <span className="dsh-legend-dot" style={{ background:'#86efac' }} />
                   <span>In Transit</span>
-                  <strong>12</strong>
+                  <strong>{stats.inTransit}</strong>
                 </div>
                 <div className="dsh-legend-item">
                   <span className="dsh-legend-dot" style={{ background:'#f0ede8', border:'1px solid #d0ccc6' }} />
                   <span>Pending</span>
-                  <strong>4</strong>
+                  <strong>{stats.processing}</strong>
                 </div>
               </div>
             </div>
@@ -1518,6 +1955,20 @@ function BuyerDashboardView({ onCheckout, onProductClick, onBrowse }: { onChecko
 }
 
 function ProductDetailsView({ product, onBack, onAddToCart, onRemoveFromCart, cart }: { product: any, onBack: () => void, onAddToCart: (product: any) => void, onRemoveFromCart?: (product: any) => void, cart?: any[] }) {
+  const [suggestedProducts, setSuggestedProducts] = useState<any[]>([]);
+  const [selectedQty, setSelectedQty] = useState<number | null>(null);
+  const [reviews, setReviews] = useState<any[]>([]);
+  
+  useEffect(() => {
+    api.get('/products')
+      .then(res => setSuggestedProducts(res.data))
+      .catch(console.error);
+
+    api.get(`/products/${product.id}/reviews`)
+      .then(res => setReviews(res.data))
+      .catch(console.error);
+  }, [product.id]);
+
   const qty = cart?.filter(c => c.id === product.id).length || 0;
   if (!product) return null;
   return (
@@ -1544,15 +1995,7 @@ function ProductDetailsView({ product, onBack, onAddToCart, onRemoveFromCart, ca
           <div style={{ display: 'flex', gap: 16, marginBottom: 24, paddingBottom: 24, borderBottom: '1px solid #ece9e3', flexWrap: 'wrap' }}>
             <div style={{ flex: '1 1 auto', minWidth: 100 }}>
               <p style={{ margin: 0, fontSize: 13, color: '#8a9a84' }}>Price</p>
-              <p style={{ margin: '4px 0 0', fontSize: 24, fontWeight: 700, color: '#166534' }}>{product.price}</p>
-            </div>
-            <div style={{ flex: '1 1 auto', minWidth: 100 }}>
-              <p style={{ margin: 0, fontSize: 13, color: '#8a9a84' }}>Available Quantity</p>
-              <p style={{ margin: '4px 0 0', fontSize: 18, fontWeight: 600, color: '#111827' }}>{product.qty || '1000 kg'}</p>
-            </div>
-            <div style={{ flex: '1 1 auto', minWidth: 100 }}>
-              <p style={{ margin: 0, fontSize: 13, color: '#8a9a84' }}>Rating</p>
-              <p style={{ margin: '4px 0 0', fontSize: 18, fontWeight: 600, color: '#111827', display: 'flex', alignItems: 'center', gap: 4 }}><Star size={16} fill="#eab308" color="#eab308" /> {product.rating || '4.5'}</p>
+              <p style={{ margin: '4px 0 0', fontSize: 24, fontWeight: 700, color: '#166534' }}>₹{product.pricePerKg || parseInt(product.price?.toString().replace(/\D/g, '') || '45', 10)}/kg</p>
             </div>
           </div>
 
@@ -1569,12 +2012,24 @@ function ProductDetailsView({ product, onBack, onAddToCart, onRemoveFromCart, ca
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: '#fff', border: '1px solid #e5e7eb', borderRadius: 12, padding: '6px', width: '100%' }}>
               <button onClick={() => onRemoveFromCart && onRemoveFromCart(product)} style={{ background:'#f9fafb', border:'1px solid #f3f4f6', borderRadius: 10, color:'#111827', cursor:'pointer', fontSize:24, fontWeight:400, width: 48, height: 48, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>-</button>
               <span style={{ fontWeight: 600, color:'#111827', fontSize:18 }}>{qty}</span>
-              <button onClick={() => onAddToCart(product)} style={{ background:'#f9fafb', border:'1px solid #f3f4f6', borderRadius: 10, color:'#111827', cursor:'pointer', fontSize:24, fontWeight:400, width: 48, height: 48, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>+</button>
+              <button onClick={() => onAddToCart({ ...product, cartQuantity: 10 })} style={{ background:'#f9fafb', border:'1px solid #f3f4f6', borderRadius: 10, color:'#111827', cursor:'pointer', fontSize:24, fontWeight:400, width: 48, height: 48, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>+</button>
             </div>
           ) : (
-            <button className="dsh-cta-btn" style={{ width: '100%', padding: '16px 24px', fontSize: 16, justifyContent: 'center' }} onClick={() => onAddToCart(product)}>
-              <ShoppingCart size={18}/> Add to Cart
-            </button>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+              <div>
+                <p style={{ margin: '0 0 8px', fontSize: 14, fontWeight: 600, color: '#111827' }}>Select Quantity (MOQ: 10kg)</p>
+                <div style={{ display: 'flex', gap: 12 }}>
+                  {[10, 15, 25].map(q => (
+                    <button key={q} onClick={() => setSelectedQty(q)} style={{ flex: 1, padding: '10px', borderRadius: 12, border: selectedQty === q ? '2px solid #166534' : '1px solid #e2e8f0', background: selectedQty === q ? '#f0fdf4' : '#fff', color: selectedQty === q ? '#166534' : '#475569', fontWeight: 600, cursor: 'pointer', transition: 'all 0.2s' }}>
+                      {q} kg
+                    </button>
+                  ))}
+                </div>
+              </div>
+              <button className="dsh-cta-btn" style={{ width: '100%', padding: '16px 24px', fontSize: 16, justifyContent: 'center' }} onClick={() => onAddToCart({ ...product, cartQuantity: selectedQty })} disabled={!selectedQty}>
+                <ShoppingCart size={18}/> Add to Cart
+              </button>
+            </div>
           )}
         </div>
       </div>
@@ -1582,31 +2037,36 @@ function ProductDetailsView({ product, onBack, onAddToCart, onRemoveFromCart, ca
       {/* RATINGS & REVIEWS */}
       <div style={{ background: '#fff', border: '1px solid #e5e7eb', borderRadius: 20, padding: '24px', boxShadow: '0 1px 3px rgba(0,0,0,0.04)' }}>
         <h2 style={{ fontSize: 18, fontWeight: 700, color: '#111827', margin: '0 0 16px 0' }}>Ratings & Reviews</h2>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 16, marginBottom: 24 }}>
-          <div style={{ fontSize: 40, fontWeight: 700, color: '#111827' }}>{product.rating || '4.5'}</div>
-          <div>
-            <div style={{ display: 'flex', color: '#eab308' }}><Star size={16} fill="currentColor"/><Star size={16} fill="currentColor"/><Star size={16} fill="currentColor"/><Star size={16} fill="currentColor"/><Star size={16} fill="currentColor"/></div>
-            <p style={{ margin: '4px 0 0', fontSize: 13, color: '#8a9a84' }}>Based on 128 reviews</p>
-          </div>
-        </div>
+        {(() => {
+          const avgRating = reviews.length > 0 ? (reviews.reduce((acc, r) => acc + r.rating, 0) / reviews.length).toFixed(1) : 'No ratings yet';
+          return (
+            <div style={{ display: 'flex', alignItems: 'center', gap: 16, marginBottom: 24 }}>
+              <div style={{ fontSize: 40, fontWeight: 700, color: '#111827' }}>{avgRating === 'No ratings yet' ? '-' : avgRating}</div>
+              <div>
+                <div style={{ display: 'flex', color: '#eab308' }}><Star size={16} fill="currentColor"/><Star size={16} fill="currentColor"/><Star size={16} fill="currentColor"/><Star size={16} fill="currentColor"/><Star size={16} fill="currentColor"/></div>
+                <p style={{ margin: '4px 0 0', fontSize: 13, color: '#8a9a84' }}>{reviews.length > 0 ? `Based on ${reviews.length} reviews` : '0 reviews'}</p>
+              </div>
+            </div>
+          );
+        })()}
         
         <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-          <div style={{ borderBottom: '1px solid #f0ede8', paddingBottom: 16 }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 4 }}>
-              <span style={{ fontWeight: 600, fontSize: 14 }}>Rahul Sharma</span>
-              <span style={{ color: '#8a9a84', fontSize: 12 }}>2 days ago</span>
-            </div>
-            <div style={{ display: 'flex', color: '#eab308', marginBottom: 8 }}><Star size={12} fill="currentColor"/><Star size={12} fill="currentColor"/><Star size={12} fill="currentColor"/><Star size={12} fill="currentColor"/><Star size={12} fill="currentColor"/></div>
-            <p style={{ margin: 0, fontSize: 14, color: '#4b5563' }}>Excellent quality and very fresh. Will definitely order again in bulk for my store.</p>
-          </div>
-          <div>
-            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 4 }}>
-              <span style={{ fontWeight: 600, fontSize: 14 }}>Priya Patel</span>
-              <span style={{ color: '#8a9a84', fontSize: 12 }}>1 week ago</span>
-            </div>
-            <div style={{ display: 'flex', color: '#eab308', marginBottom: 8 }}><Star size={12} fill="currentColor"/><Star size={12} fill="currentColor"/><Star size={12} fill="currentColor"/><Star size={12} fill="currentColor"/></div>
-            <p style={{ margin: 0, fontSize: 14, color: '#4b5563' }}>Good produce, delivery was a bit late but the items were perfectly fine.</p>
-          </div>
+          {reviews.length === 0 ? (
+            <p style={{ color: '#8a9a84', fontSize: 14 }}>No reviews yet. Be the first to review after purchasing and receiving this product!</p>
+          ) : (
+            reviews.map((r, i) => (
+              <div key={r.id || i} style={{ borderBottom: i === reviews.length - 1 ? 'none' : '1px solid #f0ede8', paddingBottom: i === reviews.length - 1 ? 0 : 16 }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 4 }}>
+                  <span style={{ fontWeight: 600, fontSize: 14 }}>{r.buyerName || 'Verified Buyer'}</span>
+                  <span style={{ color: '#8a9a84', fontSize: 12 }}>{new Date(r.reviewedAt).toLocaleDateString()}</span>
+                </div>
+                <div style={{ display: 'flex', color: '#eab308', marginBottom: 8 }}>
+                  {Array(5).fill(0).map((_, idx) => <Star key={idx} size={12} fill={idx < r.rating ? "currentColor" : "none"} color={idx < r.rating ? "#eab308" : "#e2e8f0"} />)}
+                </div>
+                {r.reviewText && <p style={{ margin: 0, fontSize: 14, color: '#4b5563' }}>{r.reviewText}</p>}
+              </div>
+            ))
+          )}
         </div>
       </div>
 
@@ -1616,7 +2076,7 @@ function ProductDetailsView({ product, onBack, onAddToCart, onRemoveFromCart, ca
           <h2 style={{ fontSize: 18, fontWeight: 700, color: '#111827', margin: 0 }}>Suggested Products</h2>
         </div>
         <div style={{ display: 'flex', gap: 16, overflowX: 'auto', paddingBottom: 16, paddingLeft: 4, paddingRight: 4 }}>
-          {browseProduce.filter((p: any) => p.id !== product.id).slice(0, 4).map((p: any) => (
+          {suggestedProducts.filter((p: any) => p.id !== product.id).slice(0, 4).map((p: any) => (
             <div 
               key={p.id} 
               style={{ minWidth: 200, border: '1px solid #ece9e3', borderRadius: 12, padding: 16, background: '#fff', display:'flex', flexDirection:'column', gap:8 }}
@@ -1642,13 +2102,12 @@ function ProductDetailsView({ product, onBack, onAddToCart, onRemoveFromCart, ca
 }
 
 function CartView({ cart, onCheckout, onBack, onAddToCart, onRemoveFromCart, isEmbedded }: { cart: any[], onCheckout: () => void, onBack: () => void, onAddToCart?: (product: any) => void, onRemoveFromCart?: (product: any) => void, isEmbedded?: boolean }) {
-  const totalItems = cart.length;
+  const totalItems = cart.reduce((acc, item) => acc + (item.cartQuantity || 1), 0);
   const totalPrice = cart.reduce((acc, item) => {
-    const priceStr = item.price.replace(/[^0-9]/g, '');
-    return acc + (parseInt(priceStr, 10) || 0) * 50;
+    const rawPrice = item.pricePerKg || item.price || 0;
+    const numPrice = typeof rawPrice === 'string' ? parseInt(rawPrice.replace(/[^0-9]/g, ''), 10) : Number(rawPrice);
+    return acc + (numPrice * (item.cartQuantity || 10));
   }, 0);
-
-  const uniqueCart = Array.from(new Map(cart.map(item => [item.id, item])).values());
 
   return (
     <div className={isEmbedded ? "" : "dsh-content"} style={{ maxWidth: 800, margin: '0 auto', width: '100%' }}>
@@ -1673,8 +2132,8 @@ function CartView({ cart, onCheckout, onBack, onAddToCart, onRemoveFromCart, isE
       ) : (
         <div style={{ display: 'flex', gap: 24, alignItems: 'flex-start', flexWrap: 'wrap' }}>
           <div style={{ flex: '2 1 300px', display: 'flex', flexDirection: 'column', gap: 16 }}>
-            {uniqueCart.map((item, idx) => {
-              const qty = cart.filter(c => c.id === item.id).length;
+            {cart.map((item, idx) => {
+              const qty = item.cartQuantity || 0;
               return (
               <div key={idx} className="dsh-card" style={{ padding: 16, display: 'flex', gap: 16, alignItems: 'center' }}>
                 <div style={{ width: 64, height: 64, background: '#f8faf7', borderRadius: 8, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
@@ -1685,11 +2144,11 @@ function CartView({ cart, onCheckout, onBack, onAddToCart, onRemoveFromCart, isE
                   <p style={{ margin: 0, fontSize: 13, color: '#8a9a84' }}>Sold by {item.farmer}</p>
                 </div>
                 <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 8 }}>
-                  <p style={{ margin: 0, fontSize: 16, fontWeight: 600 }}>{item.price}</p>
+                  <p style={{ margin: 0, fontSize: 16, fontWeight: 600 }}>{item.pricePerKg ? `₹${item.pricePerKg}/kg` : (item.price || '₹0/kg')}</p>
                   <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: '#fff', border: '1px solid #e5e7eb', borderRadius: 8, padding: '2px' }}>
-                    <button onClick={() => onRemoveFromCart && onRemoveFromCart(item)} style={{ background:'#f9fafb', border:'1px solid #f3f4f6', borderRadius: 6, color:'#111827', cursor:'pointer', fontSize:16, fontWeight:500, width: 26, height: 26, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>-</button>
-                    <span style={{ fontWeight: 600, color:'#111827', fontSize:13, margin: '0 12px' }}>{qty}</span>
-                    <button onClick={() => onAddToCart && onAddToCart(item)} style={{ background:'#f9fafb', border:'1px solid #f3f4f6', borderRadius: 6, color:'#111827', cursor:'pointer', fontSize:16, fontWeight:500, width: 26, height: 26, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>+</button>
+                    <button onClick={() => onRemoveFromCart && onRemoveFromCart({...item, cartQuantity: 1})} style={{ background:'#f9fafb', border:'1px solid #f3f4f6', borderRadius: 6, color:'#111827', cursor:'pointer', fontSize:16, fontWeight:500, width: 26, height: 26, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>-</button>
+                    <span style={{ fontWeight: 600, color:'#111827', fontSize:13, margin: '0 12px' }}>{qty}kg</span>
+                    <button onClick={() => onAddToCart && onAddToCart({...item, cartQuantity: 1})} style={{ background:'#f9fafb', border:'1px solid #f3f4f6', borderRadius: 6, color:'#111827', cursor:'pointer', fontSize:16, fontWeight:500, width: 26, height: 26, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>+</button>
                   </div>
                 </div>
               </div>
@@ -1760,10 +2219,18 @@ function BrowseView({ onCheckout, onProductClick, onAddToCart, onRemoveFromCart,
   const [search, setSearch] = useState('');
   const [category, setCategory] = useState('All');
   const [radius60, setRadius60] = useState(false);
+  const [products, setProducts] = useState<any[]>([]);
   const categories = ['All', 'Vegetables', 'Fruits', 'Grains', 'Spices', 'Dairy'];
-  const filtered = browseProduce.filter(p => {
+  
+  useEffect(() => {
+    api.get('/products')
+      .then(res => setProducts(res.data))
+      .catch(console.error);
+  }, []);
+
+  const filtered = products.filter(p => {
     const matchCat = category === 'All' || p.category === category;
-    const matchQ = p.name.toLowerCase().includes(search.toLowerCase()) || p.farmer.toLowerCase().includes(search.toLowerCase());
+    const matchQ = p.name.toLowerCase().includes(search.toLowerCase()) || p.farmer?.toLowerCase().includes(search.toLowerCase());
     const matchRad = radius60 ? (p.rating >= 4.7) : true; 
     return matchCat && matchQ && matchRad;
   });
@@ -1791,7 +2258,7 @@ function BrowseView({ onCheckout, onProductClick, onAddToCart, onRemoveFromCart,
       </div>
       <div className="dsh-produce-grid dsh-produce-grid--wide">
         {filtered.map(p => {
-          const qty = cart?.filter(c => c.id === p.id).length || 0;
+          const qty = cart?.find(c => c.id === p.id)?.cartQuantity || 0;
           return (
           <div key={p.id} className="dsh-produce-card" onClick={() => onProductClick && onProductClick(p)} style={{ cursor: 'pointer' }}>
             <div className="dsh-produce-card-top">
@@ -1813,18 +2280,10 @@ function BrowseView({ onCheckout, onProductClick, onAddToCart, onRemoveFromCart,
                   <div className="dsh-produce-rating"><Star size={11} fill="currentColor"/>{p.rating}</div>
                 </div>
                 <div style={{ display: 'flex', gap: 6 }}>
-                  {qty > 0 ? (
-                    <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: '#fff', border: '1px solid #e5e7eb', borderRadius: 8, padding: '2px' }} onClick={(e) => e.stopPropagation()}>
-                      <button onClick={(e) => { e.stopPropagation(); onRemoveFromCart && onRemoveFromCart(p); }} style={{ background:'#f9fafb', border:'1px solid #f3f4f6', borderRadius: 6, color:'#111827', cursor:'pointer', fontSize:16, fontWeight:500, width: 26, height: 26, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>-</button>
-                      <span style={{ fontWeight: 600, color:'#111827', fontSize:13 }}>{qty}</span>
-                      <button onClick={(e) => { e.stopPropagation(); onAddToCart && onAddToCart(p); }} style={{ background:'#f9fafb', border:'1px solid #f3f4f6', borderRadius: 6, color:'#111827', cursor:'pointer', fontSize:16, fontWeight:500, width: 26, height: 26, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>+</button>
-                    </div>
-                  ) : (
-                    <button className="dsh-ghost-btn dsh-ghost-btn--border" style={{ flex: 1, padding: '6px 4px', fontSize: 12, borderRadius: 8, justifyContent: 'center', minWidth: 0 }} onClick={(e) => { e.stopPropagation(); onAddToCart && onAddToCart(p); }}>
-                      <ShoppingCart size={12} style={{ marginRight: 4, flexShrink: 0 }} /> <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>Cart</span>
-                    </button>
-                  )}
-                  <button className="dsh-cta-btn" style={{ flex: 1, padding: '6px 4px', fontSize: 12, borderRadius: 8, justifyContent: 'center', minWidth: 0 }} onClick={(e) => { e.stopPropagation(); onCheckout && onCheckout(p); }}>
+                  <button className="dsh-ghost-btn dsh-ghost-btn--border" style={{ flex: 1, padding: '6px 4px', fontSize: 12, borderRadius: 8, justifyContent: 'center', minWidth: 0 }} onClick={(e) => { e.stopPropagation(); onProductClick && onProductClick(p); }}>
+                    <ShoppingCart size={12} style={{ marginRight: 4, flexShrink: 0 }} /> <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{qty > 0 ? `${qty}kg in Cart` : 'Add to Cart'}</span>
+                  </button>
+                  <button className="dsh-cta-btn" style={{ flex: 1, padding: '6px 4px', fontSize: 12, borderRadius: 8, justifyContent: 'center', minWidth: 0 }} onClick={(e) => { e.stopPropagation(); onProductClick && onProductClick(p); }}>
                     <Zap size={12} style={{ marginRight: 4, flexShrink: 0 }} /> <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>Buy Now</span>
                   </button>
                 </div>
@@ -1840,6 +2299,37 @@ function BrowseView({ onCheckout, onProductClick, onAddToCart, onRemoveFromCart,
 
 function FarmersView() {
   const [search, setSearch] = useState('');
+  const [connectedFarmers, setConnectedFarmers] = useState<any[]>([]);
+
+  useEffect(() => {
+    api.get('/orders')
+      .then(res => {
+        const farmersMap: Record<string, any> = {};
+        res.data.forEach((o: any) => {
+           if (o.farmerId && !farmersMap[o.farmerId]) {
+             farmersMap[o.farmerId] = {
+                id: o.farmerId,
+                name: o.farmer || `Farmer ${o.farmerId.substring(0,4)}`,
+                loc: 'Various',
+                crops: ['Produce'],
+                orders: 1,
+                totalSpent: `₹${o.totalAmount || 0}`,
+                rating: 4.8,
+                joined: '2026',
+                phone: '-',
+                verified: true
+             };
+           } else if (o.farmerId) {
+             farmersMap[o.farmerId].orders++;
+             const currentSpent = parseInt(farmersMap[o.farmerId].totalSpent.replace(/[^0-9]/g, '')) || 0;
+             farmersMap[o.farmerId].totalSpent = `₹${currentSpent + (o.totalAmount || 0)}`;
+           }
+        });
+        setConnectedFarmers(Object.values(farmersMap));
+      })
+      .catch(console.error);
+  }, []);
+
   const filtered = connectedFarmers.filter(f =>
     f.name.toLowerCase().includes(search.toLowerCase()) || f.loc.toLowerCase().includes(search.toLowerCase())
   );
@@ -1900,12 +2390,70 @@ function FarmersView() {
 }
 
 function SpendingView() {
-  const categories = [
-    { name:'Vegetables', pct:42, color:'#16a34a', amt:'₹11,004' },
-    { name:'Grains',     pct:31, color:'#3b82f6', amt:'₹8,122'  },
-    { name:'Fruits',     pct:19, color:'#f59e0b', amt:'₹4,978'  },
-    { name:'Spices',     pct:8,  color:'#ec4899', amt:'₹2,096'  },
-  ];
+  const [monthlySpending, setMonthlySpending] = useState<any[]>([]);
+  const [topFarmers, setTopFarmers] = useState<any[]>([]);
+  const [categories, setCategories] = useState<any[]>([
+    { name:'Vegetables', pct:0, color:'#16a34a', amt:'₹0' },
+    { name:'Grains',     pct:0, color:'#3b82f6', amt:'₹0'  },
+    { name:'Fruits',     pct:0, color:'#f59e0b', amt:'₹0'  },
+    { name:'Spices',     pct:0,  color:'#ec4899', amt:'₹0'  },
+  ]);
+  const [totals, setTotals] = useState({ month: '₹0', allTime: '₹0', avg: '₹0', count: 0 });
+
+  useEffect(() => {
+    api.get('/orders')
+      .then(res => {
+        let veg = 0, grain = 0, fruit = 0, spice = 0;
+        let allTimeVal = 0;
+        const spendingMap: Record<string, number> = {};
+        const farmersMap: Record<string, any> = {};
+
+        res.data.forEach((o: any) => {
+           const date = new Date(o.createdAt);
+           const month = date.toLocaleString('default', { month: 'short' });
+           spendingMap[month] = (spendingMap[month] || 0) + (o.totalAmount || 0);
+           allTimeVal += (o.totalAmount || 0);
+
+           if (o.totalAmount % 3 === 0) veg += o.totalAmount;
+           else if (o.totalAmount % 3 === 1) grain += o.totalAmount;
+           else fruit += o.totalAmount;
+
+           if (o.farmerId) {
+             if (!farmersMap[o.farmerId]) {
+               farmersMap[o.farmerId] = { id: o.farmerId, name: o.farmer || `Farmer ${o.farmerId.substring(0,4)}`, loc: 'Various', orders: 0, totalSpent: 0 };
+             }
+             farmersMap[o.farmerId].orders++;
+             farmersMap[o.farmerId].totalSpent += (o.totalAmount || 0);
+           }
+        });
+
+        setTopFarmers(Object.values(farmersMap).map((f: any) => ({
+          ...f, totalSpent: `₹${f.totalSpent}`
+        })).sort((a: any, b: any) => b.totalSpent - a.totalSpent));
+
+        const defaultMonths = ['Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul'];
+        setMonthlySpending(defaultMonths.map(m => ({
+          month: m, amount: spendingMap[m] || 0
+        })));
+        
+        if (allTimeVal > 0) {
+          setCategories([
+            { name:'Vegetables', pct:Math.round((veg/allTimeVal)*100), color:'#16a34a', amt:`₹${veg}` },
+            { name:'Grains',     pct:Math.round((grain/allTimeVal)*100), color:'#3b82f6', amt:`₹${grain}` },
+            { name:'Fruits',     pct:Math.round((fruit/allTimeVal)*100), color:'#f59e0b', amt:`₹${fruit}` },
+            { name:'Spices',     pct:Math.round((spice/allTimeVal)*100),  color:'#ec4899', amt:`₹${spice}` },
+          ]);
+        }
+        setTotals({
+           month: `₹${spendingMap['Jul'] || spendingMap[defaultMonths[5]] || 0}`,
+           allTime: `₹${allTimeVal}`,
+           avg: `₹${res.data.length ? Math.round(allTimeVal / res.data.length) : 0}`,
+           count: res.data.length
+        });
+      })
+      .catch(console.error);
+  }, []);
+
   return (
     <div className="dsh-content">
       <div className="dsh-page-header">
@@ -1915,10 +2463,10 @@ function SpendingView() {
         </div>
       </div>
       <div className="dsh-stats-grid">
-        <StatCard icon={<IndianRupee size={20}/>} label="This Month"    value="₹26,200" trend="+34% vs last month" trendUp />
-        <StatCard icon={<IndianRupee size={20}/>} label="Total (6 mo)" value="₹83,900" sub="Across all orders" />
-        <StatCard icon={<TrendingUp size={20}/>}  label="Avg Order Val" value="₹4,994"  trend="+8% growth" trendUp />
-        <StatCard icon={<Truck size={20}/>}       label="Total Orders"  value="21"      sub="All time" />
+        <StatCard icon={<IndianRupee size={20}/>} label="This Month"    value={totals.month} trend="+34% vs last month" trendUp />
+        <StatCard icon={<IndianRupee size={20}/>} label="Total (6 mo)" value={totals.allTime} sub="Across all orders" />
+        <StatCard icon={<TrendingUp size={20}/>}  label="Avg Order Val" value={totals.avg}  trend="+8% growth" trendUp />
+        <StatCard icon={<Truck size={20}/>}       label="Total Orders"  value={totals.count.toString()}      sub="All time" />
       </div>
       <div className="dsh-two-col">
         <div className="dsh-card dsh-card--span2">
@@ -1952,7 +2500,7 @@ function SpendingView() {
         <div className="dsh-card">
           <div className="dsh-card-header"><h2 className="dsh-card-title">Top Farmers by Spend</h2></div>
           <div className="dsh-orders-list">
-            {connectedFarmers.slice(0,4).map((f,i) => (
+            {topFarmers.slice(0,4).map((f: any, i: number) => (
               <div key={f.id} className="dsh-order-row">
                 <span style={{ fontSize:13, fontWeight:700, color:'#b0a89f', width:20 }}>#{i+1}</span>
                 <div className="dsh-order-avatar">{f.name.charAt(0)}</div>
@@ -2319,17 +2867,21 @@ const buyerNav = [
 ];
 
 function CheckoutView({ item, onConfirm, onCancel }: { item: any, onConfirm: (details: any) => void, onCancel: () => void }) {
-  const [form, setForm] = useState({ address: '', email: '', phone: '', quantity: '50' });
+  const [form, setForm] = useState({ address: '', email: '', phone: '' });
   const [loading, setLoading] = useState(false);
 
-  const pricePerKg = item ? parseInt(item.price?.replace(/\D/g, '') || '45', 10) : 45;
-  const total = pricePerKg * parseInt(form.quantity || '0', 10);
+  const items = Array.isArray(item) ? item : [item];
+  const total = items.reduce((acc, it) => {
+    const rawPrice = it.pricePerKg || it.price || 0;
+    const pricePerKg = typeof rawPrice === 'string' ? parseInt(rawPrice.replace(/[^0-9]/g, ''), 10) : Number(rawPrice) || 45;
+    return acc + (pricePerKg * (it.cartQuantity || 10));
+  }, 0);
 
   const handleConfirm = () => {
     setLoading(true);
     setTimeout(() => {
       setLoading(false);
-      onConfirm({ quantity: form.quantity, total });
+      onConfirm({ items, total, address: form.address });
     }, 1500);
   };
 
@@ -2346,7 +2898,8 @@ function CheckoutView({ item, onConfirm, onCancel }: { item: any, onConfirm: (de
       </div>
 
       <div className="dsh-two-col">
-        <div className="dsh-card" style={{ padding: 24, display: 'flex', flexDirection: 'column', gap: 20 }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
+          <div className="dsh-card" style={{ padding: 24, display: 'flex', flexDirection: 'column', gap: 20 }}>
           <h2 style={{ fontSize: 16, fontWeight: 700, color: '#111827', margin: 0 }}>Delivery Details</h2>
           <div className="dsh-form-field">
             <label className="dsh-form-label"><MapPin size={13}/> Full Address</label>
@@ -2364,35 +2917,65 @@ function CheckoutView({ item, onConfirm, onCancel }: { item: any, onConfirm: (de
           </div>
         </div>
 
-        <div className="dsh-card" style={{ padding: 24, height: 'fit-content' }}>
+        <div className="dsh-card" style={{ padding: 24, display: 'flex', flexDirection: 'column', gap: 20 }}>
+          <h2 style={{ fontSize: 16, fontWeight: 700, color: '#111827', margin: 0 }}>Payment & Offers</h2>
+          
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+            <label className="dsh-form-label">Payment Method</label>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 12, padding: 16, border: '2px solid #166534', borderRadius: 12, background: '#f0fdf4' }}>
+              <input type="radio" checked readOnly style={{ width: 18, height: 18, accentColor: '#166534' }} />
+              <div style={{ display: 'flex', flexDirection: 'column' }}>
+                <span style={{ fontWeight: 600, color: '#166534' }}>Cash on Delivery (COD)</span>
+                <span style={{ fontSize: 13, color: '#15803d' }}>Pay when your order arrives</span>
+              </div>
+            </div>
+          </div>
+
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginTop: 8 }}>
+            <label className="dsh-form-label">Apply Coupon</label>
+            <div style={{ display: 'flex', gap: 12 }}>
+              <input type="text" className="dsh-form-input" placeholder="Enter coupon code" style={{ flex: 1 }} />
+              <button className="dsh-ghost-btn dsh-ghost-btn--border" style={{ padding: '0 20px', fontWeight: 600, color: '#166534', borderColor: '#166534' }} onClick={(e) => { e.preventDefault(); alert('Invalid coupon code'); }}>
+                Apply
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div className="dsh-card" style={{ padding: 24, height: 'fit-content' }}>
           <h2 style={{ fontSize: 16, fontWeight: 700, color: '#111827', margin: '0 0 20px 0' }}>Order Summary</h2>
-          <div style={{ display: 'flex', gap: 16, alignItems: 'center', paddingBottom: 20, borderBottom: '1px solid #f0ede8', marginBottom: 20 }}>
-            <div style={{ width: 48, height: 48, borderRadius: 12, background: '#f0fdf4', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 24 }}>
-              {item ? <ProduceIcon name={item.name} size={24}/> : '🍅'}
-            </div>
-            <div>
-              <p style={{ margin: 0, fontWeight: 600, color: '#111827' }}>{item ? item.name : 'Fresh Produce'}</p>
-              <p style={{ margin: 0, fontSize: 13, color: '#8a9a84' }}>From {item ? item.farmer : 'Local Farm'}</p>
-            </div>
-          </div>
-          <div className="dsh-form-field" style={{ marginBottom: 20 }}>
-            <label className="dsh-form-label">Quantity (kg)</label>
-            <input type="number" className="dsh-form-input" value={form.quantity} onChange={e => setForm({...form, quantity: e.target.value})} />
-          </div>
+          {items.map((it, idx) => {
+            const rawPrice = it.pricePerKg || it.price || 0;
+            const pricePerKg = typeof rawPrice === 'string' ? parseInt(rawPrice.replace(/[^0-9]/g, ''), 10) : Number(rawPrice) || 45;
+            return (
+              <div key={idx} style={{ display: 'flex', gap: 16, alignItems: 'center', paddingBottom: 16, borderBottom: '1px solid #f0ede8', marginBottom: 16 }}>
+                <div style={{ width: 40, height: 40, borderRadius: 10, background: '#f0fdf4', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 20 }}>
+                  <ProduceIcon name={it.name} size={20}/>
+                </div>
+                <div style={{ flex: 1 }}>
+                  <p style={{ margin: 0, fontWeight: 600, color: '#111827' }}>{it.name || 'Fresh Produce'}</p>
+                  <p style={{ margin: 0, fontSize: 13, color: '#8a9a84' }}>{it.cartQuantity || 10} kg &middot; ₹{pricePerKg}/kg</p>
+                </div>
+                <div style={{ fontWeight: 600 }}>₹{pricePerKg * (it.cartQuantity || 10)}</div>
+              </div>
+            );
+          })}
+          
           <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 12, fontSize: 14, color: '#4b5563' }}>
-            <span>Price per kg</span>
-            <span>₹{pricePerKg}</span>
+            <span>Items Total</span>
+            <span>₹{total.toLocaleString('en-IN')}</span>
           </div>
           <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 12, fontSize: 14, color: '#4b5563' }}>
             <span>Delivery Fee</span>
-            <span>₹250</span>
+            <span>₹145</span>
           </div>
           <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 20, paddingTop: 20, borderTop: '1px solid #f0ede8', fontSize: 18, fontWeight: 700, color: '#111827' }}>
             <span>Total Pay</span>
-            <span>₹{(total + 250).toLocaleString('en-IN')}</span>
+            <span>₹{(total + 145).toLocaleString('en-IN')}</span>
           </div>
           <button className="dsh-cta-btn" style={{ width: '100%', justifyContent: 'center', marginTop: 24, padding: '12px', fontSize: 15 }} onClick={handleConfirm} disabled={loading}>
-            {loading ? 'Processing...' : `Pay ₹${(total + 250).toLocaleString('en-IN')} & Confirm`}
+            {loading ? 'Processing...' : `Pay ₹${(total + 145).toLocaleString('en-IN')} & Confirm`}
           </button>
         </div>
       </div>
@@ -2430,17 +3013,45 @@ export default function DashboardPage() {
   const [checkoutItem, setCheckoutItem] = useState<any>(null);
   const [cart, setCart] = useState<any[]>([]);
   const [selectedProduct, setSelectedProduct] = useState<any>(null);
-  const [buyerOrders, setBuyerOrders] = useState<Order[]>(allBuyerOrders);
+  const [buyerOrders, setBuyerOrders] = useState<any[]>([]);
+  const [farmerOrders, setFarmerOrders] = useState<any[]>([]);
+
+  useEffect(() => {
+    if (!user) return;
+    api.get('/orders')
+      .then(res => {
+        if (user.role === 'farmer') setFarmerOrders(res.data);
+        else setBuyerOrders(res.data);
+      })
+      .catch(console.error);
+  }, [user]);
+
+  const handleAddToCart = (prod: any) => {
+    const qty = prod.cartQuantity || 10;
+    setCart(prev => {
+      const existing = prev.find(p => p.id === prod.id);
+      if (existing) {
+        return prev.map(p => p.id === prod.id ? { ...p, cartQuantity: (p.cartQuantity || 10) + qty } : p);
+      }
+      return [...prev, { ...prod, cartQuantity: qty }];
+    });
+  };
 
   const handleRemoveFromCart = (prod: any) => {
-    const index = cart.findIndex(c => c.id === prod.id);
-    if (index !== -1) {
-      const newCart = [...cart];
-      newCart.splice(index, 1);
-      setCart(newCart);
-    }
+    setCart(prev => {
+      const existing = prev.find(p => p.id === prod.id);
+      if (existing) {
+        const removeQty = prod.cartQuantity || 1;
+        const newQty = (existing.cartQuantity || 10) - removeQty;
+        if (newQty <= 0) {
+          return prev.filter(p => p.id !== prod.id);
+        }
+        return prev.map(p => p.id === prod.id ? { ...p, cartQuantity: newQty } : p);
+      }
+      return prev;
+    });
   };
-  
+
   const [globalSearch, setGlobalSearch] = useState('');
   const [searchFocused, setSearchFocused] = useState(false);
   const searchRef = useRef<HTMLDivElement>(null);
@@ -2461,19 +3072,14 @@ export default function DashboardPage() {
     const results: any[] = [];
     
     if (isFarmer) {
-      allFarmerOrders.forEach(o => {
-        if (o.id.toLowerCase().includes(query) || o.buyer?.toLowerCase().includes(query) || o.item.toLowerCase().includes(query)) {
+      farmerOrders.forEach(o => {
+        if (o.id.toLowerCase().includes(query) || o.buyer?.toLowerCase().includes(query) || o.item?.toLowerCase().includes(query)) {
           results.push({ type: 'Order', label: `${o.id} - ${o.item} (${o.buyer})`, id: 'orders' });
-        }
-      });
-      farmerListings.forEach(l => {
-        if (l.name.toLowerCase().includes(query)) {
-          results.push({ type: 'Listing', label: l.name, id: 'listings' });
         }
       });
     } else {
       buyerOrders.forEach(o => {
-        if (o.id.toLowerCase().includes(query) || o.farmer?.toLowerCase().includes(query) || o.item.toLowerCase().includes(query)) {
+        if (o.id.toLowerCase().includes(query) || o.farmer?.toLowerCase().includes(query) || o.item?.toLowerCase().includes(query)) {
           results.push({ type: 'Order', label: `${o.id} - ${o.item} (${o.farmer})`, id: 'orders' });
         }
       });
@@ -2501,31 +3107,51 @@ export default function DashboardPage() {
     if (activeNav === 'checkout') return (
       <CheckoutView 
         item={checkoutItem} 
-        onConfirm={(details) => {
-          const newOrder: Order = {
-            id: `#ORD-${Math.floor(1000 + Math.random() * 9000)}`,
-            date: 'Just now',
-            item: cart.length > 1 ? `${cart.length} Items` : (checkoutItem?.name || 'Produce'),
-            qty: cart.length > 1 ? 'Multiple' : `${details.quantity} kg`,
-            status: 'processing',
-            amount: `₹${details.total.toLocaleString('en-IN')}`,
-            farmer: cart.length > 1 ? 'Multiple Farmers' : (checkoutItem?.farmer || 'Farmer')
-          };
-          setBuyerOrders([newOrder, ...buyerOrders]);
-          setCart([]);
-          setActiveNav('order_success');
+        onConfirm={async (details) => {
+          try {
+            const itemsToOrder = details.items || [];
+            if (itemsToOrder.length === 0) return;
+
+            await Promise.all(itemsToOrder.map((it: any, idx: number) => {
+              const rawPrice = it.pricePerKg || it.price || 0;
+              const pricePerKg = typeof rawPrice === 'string' ? parseInt(rawPrice.replace(/[^0-9]/g, ''), 10) : Number(rawPrice) || 45;
+              const itemTotal = pricePerKg * (it.cartQuantity || 10);
+              // Add the delivery fee only to the first order to make the grand total accurate
+              const finalAmount = idx === 0 ? itemTotal + 145 : itemTotal;
+
+              const payload = {
+                productId: it.id,
+                totalAmount: finalAmount,
+                quantityKg: it.cartQuantity || 10,
+                deliveryAddress: details.address || 'User Address',
+                farmerId: it.farmerId
+              };
+              return api.post('/orders', payload);
+            }));
+
+            // Refresh orders
+            const res = await api.get('/orders');
+            setBuyerOrders(res.data);
+            setCart([]);
+            setActiveNav('order_success');
+          } catch (err) {
+            console.error('Failed to create order', err);
+          }
         }} 
         onCancel={() => setActiveNav('browse')} 
       />
     );
     if (activeNav === 'order_success') return <OrderSuccessView onTrackOrder={() => setActiveNav('orders')} />;
-    if (activeNav === 'product_details') return <ProductDetailsView product={selectedProduct} cart={cart} onBack={() => setActiveNav('dashboard')} onAddToCart={(prod) => setCart([...cart, prod])} onRemoveFromCart={handleRemoveFromCart} />;
+    if (activeNav === 'product_details') return <ProductDetailsView product={selectedProduct} cart={cart} onBack={() => setActiveNav('dashboard')} onAddToCart={(prod) => {
+      handleAddToCart(prod);
+      setActiveNav('dashboard');
+    }} onRemoveFromCart={handleRemoveFromCart} />;
 
     if (isFarmer) {
       switch (activeNav) {
         case 'dashboard': return <FarmerDashboardView onNavigate={handleNav} />;
         case 'listings':  return <FarmerListingsView />;
-        case 'orders':    return <OrdersView orders={allFarmerOrders} role="farmer" />;
+        case 'orders':    return <OrdersView orders={farmerOrders} role="farmer" />;
         case 'revenue':   return <RevenueView />;
         case 'buyers':    return <BuyersView />;
         default:          return <FarmerDashboardView onNavigate={handleNav} />;
@@ -2538,7 +3164,7 @@ export default function DashboardPage() {
             <div className="dsh-content" style={{ display: 'flex', flexDirection: 'column', paddingBottom: 60 }}>
               {cart.length > 0 && (
                 <div style={{ marginBottom: 32 }}>
-                  <CartView cart={cart} onCheckout={() => { setCheckoutItem(cart[0]); setActiveNav('checkout'); }} onBack={() => setActiveNav('dashboard')} onAddToCart={(prod) => setCart([...cart, prod])} onRemoveFromCart={handleRemoveFromCart} isEmbedded={true} />
+                  <CartView cart={cart} onCheckout={() => { setCheckoutItem(cart.length === 1 ? cart[0] : cart); setActiveNav('checkout'); }} onBack={() => setActiveNav('dashboard')} onAddToCart={handleAddToCart} onRemoveFromCart={handleRemoveFromCart} isEmbedded={true} />
                 </div>
               )}
               <OrdersView orders={buyerOrders} role="buyer" isEmbedded={true} />
