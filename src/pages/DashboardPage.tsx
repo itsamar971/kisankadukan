@@ -2935,6 +2935,11 @@ const buyerNav = [
 function CheckoutView({ item, onConfirm, onCancel }: { item: any, onConfirm: (details: any) => void, onCancel: () => void }) {
   const [form, setForm] = useState({ address: '', email: '', phone: '' });
   const [loading, setLoading] = useState(false);
+  const [couponCode, setCouponCode] = useState('');
+  const [discountPct, setDiscountPct] = useState(0);
+  const [couponError, setCouponError] = useState('');
+  const [couponSuccess, setCouponSuccess] = useState('');
+  const [validatingCoupon, setValidatingCoupon] = useState(false);
 
   const items = Array.isArray(item) ? item : [item];
   const total = items.reduce((acc, it) => {
@@ -2943,11 +2948,32 @@ function CheckoutView({ item, onConfirm, onCancel }: { item: any, onConfirm: (de
     return acc + (pricePerKg * (it.cartQuantity || 10));
   }, 0);
 
+  const discountAmount = Math.floor((total * discountPct) / 100);
+  const finalTotal = total - discountAmount + 145;
+
+  const applyCoupon = async (e: React.MouseEvent) => {
+    e.preventDefault();
+    if (!couponCode) return;
+    setValidatingCoupon(true);
+    setCouponError('');
+    setCouponSuccess('');
+    try {
+      const res = await api.post('/market/promotions/validate', { code: couponCode });
+      setDiscountPct(res.data.discountPercentage);
+      setCouponSuccess(`Coupon applied! ${res.data.discountPercentage}% off`);
+    } catch (err: any) {
+      setCouponError(err.response?.data?.error || 'Invalid coupon code');
+      setDiscountPct(0);
+    } finally {
+      setValidatingCoupon(false);
+    }
+  };
+
   const handleConfirm = () => {
     setLoading(true);
     setTimeout(() => {
       setLoading(false);
-      onConfirm({ items, total, address: form.address });
+      onConfirm({ items, total, finalTotal, discountAmount, discountPct, couponCode, address: form.address });
     }, 1500);
   };
 
@@ -3000,11 +3026,13 @@ function CheckoutView({ item, onConfirm, onCancel }: { item: any, onConfirm: (de
           <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginTop: 8 }}>
             <label className="dsh-form-label">Apply Coupon</label>
             <div style={{ display: 'flex', gap: 12 }}>
-              <input type="text" className="dsh-form-input" placeholder="Enter coupon code" style={{ flex: 1 }} />
-              <button className="dsh-ghost-btn dsh-ghost-btn--border" style={{ padding: '0 20px', fontWeight: 600, color: '#166534', borderColor: '#166534' }} onClick={(e) => { e.preventDefault(); alert('Invalid coupon code'); }}>
-                Apply
+              <input type="text" className="dsh-form-input" placeholder="Enter coupon code" style={{ flex: 1 }} value={couponCode} onChange={e => setCouponCode(e.target.value)} />
+              <button className="dsh-ghost-btn dsh-ghost-btn--border" style={{ padding: '0 20px', fontWeight: 600, color: '#166534', borderColor: '#166534' }} onClick={applyCoupon} disabled={validatingCoupon}>
+                {validatingCoupon ? '...' : 'Apply'}
               </button>
             </div>
+            {couponError && <p style={{ color: 'red', fontSize: 12, margin: '4px 0 0' }}>{couponError}</p>}
+            {couponSuccess && <p style={{ color: '#16a34a', fontSize: 12, margin: '4px 0 0', fontWeight: 600 }}>{couponSuccess}</p>}
           </div>
         </div>
       </div>
@@ -3032,16 +3060,22 @@ function CheckoutView({ item, onConfirm, onCancel }: { item: any, onConfirm: (de
             <span>Items Total</span>
             <span>₹{total.toLocaleString('en-IN')}</span>
           </div>
+          {discountAmount > 0 && (
+            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 12, fontSize: 14, color: '#16a34a', fontWeight: 600 }}>
+              <span>Discount ({discountPct}%)</span>
+              <span>-₹{discountAmount.toLocaleString('en-IN')}</span>
+            </div>
+          )}
           <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 12, fontSize: 14, color: '#4b5563' }}>
             <span>Delivery Fee</span>
             <span>₹145</span>
           </div>
           <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 20, paddingTop: 20, borderTop: '1px solid #f0ede8', fontSize: 18, fontWeight: 700, color: '#111827' }}>
             <span>Total Pay</span>
-            <span>₹{(total + 145).toLocaleString('en-IN')}</span>
+            <span>₹{finalTotal.toLocaleString('en-IN')}</span>
           </div>
           <button className="dsh-cta-btn" style={{ width: '100%', justifyContent: 'center', marginTop: 24, padding: '12px', fontSize: 15 }} onClick={handleConfirm} disabled={loading}>
-            {loading ? 'Processing...' : `Pay ₹${(total + 145).toLocaleString('en-IN')} & Confirm`}
+            {loading ? 'Processing...' : `Pay ₹${finalTotal.toLocaleString('en-IN')} & Confirm`}
           </button>
         </div>
       </div>
