@@ -5,6 +5,7 @@ import {
   Eye, EyeOff, ArrowRight, Leaf, ShoppingCart, Tractor,
   CheckCircle2, MapPin, Phone, Mail, User, FileText
 } from 'lucide-react';
+import { LumaSpin } from '../components/ui/LumaSpin';
 
 /* ── Role card ── */
 function RoleCard({
@@ -72,6 +73,7 @@ export default function RegisterPage() {
   const [error, setError] = useState('');
   const [focused, setFocused] = useState<string | null>(null);
   const [mounted, setMounted] = useState(false);
+  const [showSplash, setShowSplash] = useState(true);
   const [step, setStep] = useState(0); // 0=role, 1=details, 2=security
 
   const [email, setEmail] = useState('');
@@ -87,7 +89,11 @@ export default function RegisterPage() {
 
   const totalSteps = 3;
 
-  useEffect(() => { setMounted(true); }, []);
+  useEffect(() => { 
+    setMounted(true); 
+    const timer = setTimeout(() => setShowSplash(false), 2000);
+    return () => clearTimeout(timer);
+  }, []);
 
   const handleRoleChange = (newRole: 'buyer' | 'farmer') => {
     setRole(newRole);
@@ -136,6 +142,19 @@ export default function RegisterPage() {
 
   const isFinalStep = step === totalSteps - 1;
   const stepLabels = ['Choose Role', 'Your Details', 'Account Security'];
+
+  if (showSplash) {
+    return (
+      <div style={{ position: 'fixed', inset: 0, backgroundColor: '#ffffff', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', zIndex: 9999 }}>
+        <img 
+          src="/IMG-20260728-WA0006-removebg-preview.png" 
+          alt="Kisan Ka Dukan Splash" 
+          style={{ width: '220px', height: 'auto', marginBottom: '40px', animation: 'pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite' }} 
+        />
+        <LumaSpin />
+      </div>
+    );
+  }
 
   return (
     <div className="uui-auth-root">

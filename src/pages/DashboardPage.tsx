@@ -11,7 +11,8 @@ import {
   MessageSquare, Sparkles, ArrowRight, Apple, Target, Zap, Shield, Home, Upload
 } from 'lucide-react';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
-import { storage } from '../firebase';
+import { updatePassword } from 'firebase/auth';
+import { storage, auth } from '../firebase';
 
 /* ═══════════════════════════ API DATA TYPES ═══════════════════════════ */
 import { api } from '../lib/api';
@@ -2525,7 +2526,7 @@ function SpendingView() {
 function SettingsView({ onNavigate }: { onNavigate: (id: string) => void }) {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
-  const handleLogout = () => { logout(); navigate('/login'); };
+  const handleLogout = () => { logout(); navigate('/'); };
   const [radius60, setRadius60] = useState(false);
 
   const sections = [
@@ -2613,6 +2614,39 @@ function SettingsView({ onNavigate }: { onNavigate: (id: string) => void }) {
 }
 
 function PrivacyView({ onBack }: { onBack: () => void }) {
+  const [changingPassword, setChangingPassword] = useState(false);
+  const [newPassword, setNewPassword] = useState('');
+  const [passStatus, setPassStatus] = useState('');
+  const [loading, setLoading] = useState(false);
+
+  const handleChangePassword = async () => {
+    if (!newPassword || newPassword.length < 6) {
+      setPassStatus('Password must be at least 6 characters');
+      return;
+    }
+    if (!auth.currentUser) {
+      setPassStatus('You must be logged in');
+      return;
+    }
+    
+    setLoading(true);
+    setPassStatus('');
+    try {
+      await updatePassword(auth.currentUser, newPassword);
+      setPassStatus('Password updated successfully!');
+      setNewPassword('');
+      setTimeout(() => setChangingPassword(false), 2000);
+    } catch (err: any) {
+      console.error(err);
+      if (err.code === 'auth/requires-recent-login') {
+        setPassStatus('Please sign out and sign in again to change password.');
+      } else {
+        setPassStatus(err.message || 'Failed to update password');
+      }
+    }
+    setLoading(false);
+  };
+
   return (
     <div className="sv-page" style={{ height: '100vh', overflowY: 'auto', paddingBottom: 120 }}>
       <div className="dsh-page-header" style={{ padding: '0 16px' }}>
@@ -2623,7 +2657,37 @@ function PrivacyView({ onBack }: { onBack: () => void }) {
       </div>
       <div className="sv-group" style={{ marginTop: 20 }}>
         <div className="sv-group-card">
-          <div className="sv-row"><span className="sv-row-label">Change Password</span><ChevronRight size={14} style={{color:'#c7c7cc'}}/></div>
+          <div className="sv-row" onClick={() => setChangingPassword(!changingPassword)} style={{ cursor: 'pointer' }}>
+            <span className="sv-row-label">Change Password</span>
+            <ChevronRight size={14} style={{ color: '#c7c7cc', transform: changingPassword ? 'rotate(90deg)' : 'rotate(0deg)', transition: 'transform 0.2s' }}/>
+          </div>
+          
+          {changingPassword && (
+            <div style={{ padding: '0 16px 16px' }}>
+              <input 
+                type="password" 
+                placeholder="Enter new password" 
+                className="kkd-input" 
+                style={{ marginBottom: 8, padding: '10px 14px', fontSize: 14 }}
+                value={newPassword}
+                onChange={(e) => setNewPassword(e.target.value)}
+              />
+              {passStatus && (
+                <p style={{ fontSize: 13, marginBottom: 12, color: passStatus.includes('success') ? '#16a34a' : '#dc2626' }}>
+                  {passStatus}
+                </p>
+              )}
+              <button 
+                className="dsh-cta-btn" 
+                style={{ width: '100%', padding: '10px', fontSize: 14 }}
+                onClick={handleChangePassword}
+                disabled={loading}
+              >
+                {loading ? 'Updating...' : 'Update Password'}
+              </button>
+            </div>
+          )}
+          
           <div className="sv-divider"/>
           <div className="sv-row"><span className="sv-row-label">Two-Factor Authentication</span><span className="sv-row-sub">Disabled</span></div>
           <div className="sv-divider"/>
@@ -2645,9 +2709,11 @@ function SupportView({ onBack }: { onBack: () => void }) {
       </div>
       <div className="sv-group" style={{ marginTop: 20 }}>
         <div className="sv-group-card">
-          <div className="sv-row"><div className="sv-row-icon-wrap"><Phone size={16}/></div><span className="sv-row-label">Call Support (24/7)</span></div>
+          <div className="sv-row"><div className="sv-row-icon-wrap"><Phone size={16}/></div><span className="sv-row-label">Call Support (24/7): +91 98665 31592</span></div>
           <div className="sv-divider"/>
-          <div className="sv-row"><div className="sv-row-icon-wrap"><Mail size={16}/></div><span className="sv-row-label">Email Us</span></div>
+          <div className="sv-row"><div className="sv-row-icon-wrap"><Mail size={16}/></div><span className="sv-row-label">Email Us: kisankadhukan2026@gmail.com</span></div>
+          <div className="sv-divider"/>
+          <div className="sv-row"><div className="sv-row-icon-wrap"><MapPin size={16}/></div><span className="sv-row-label">Address: 16-22 Gajwel, Telangana</span></div>
           <div className="sv-divider"/>
           <div className="sv-row"><div className="sv-row-icon-wrap"><FileText size={16}/></div><span className="sv-row-label">FAQs</span></div>
         </div>
@@ -3092,7 +3158,7 @@ export default function DashboardPage() {
   const isFarmer = user.role === 'farmer';
   const navItems = isFarmer ? farmerNav : buyerNav;
 
-  const handleLogout = () => { logout(); navigate('/login'); };
+  const handleLogout = () => { logout(); navigate('/'); };
 
   const handleNav = (id: string) => { setActiveNav(id); };
 

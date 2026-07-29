@@ -62,9 +62,9 @@ export default function Navbar({ navOnLight, hideNav, onOpenWaitlist }: NavbarPr
               </Link>
             );
           })}
-          <button onClick={onOpenWaitlist} className="ml-2 bg-[#1f2a1d] hover:bg-[#2a3827] text-white text-sm font-medium px-5 py-2.5 rounded-full transition-colors">
-            Join Waitlist
-          </button>
+          <Link to="/register" className="ml-2 bg-[#1f2a1d] hover:bg-[#2a3827] text-white text-sm font-medium px-5 py-2.5 rounded-full transition-colors text-center inline-block">
+            Register
+          </Link>
         </div>
 
         <div className={`flex items-center gap-3 sm:gap-6 lg:justify-self-end transition-colors duration-500 ${navOnLight ? 'text-black' : 'text-white/90'}`}>
@@ -72,12 +72,9 @@ export default function Navbar({ navOnLight, hideNav, onOpenWaitlist }: NavbarPr
             <LogIn className="w-4 h-4" strokeWidth={1.95} />
             Sign In
           </Link>
-          <Link to="/register" className="hidden sm:flex items-center gap-2 text-sm font-medium hover:opacity-80 transition-opacity">
+          <Link to="/register" className="lg:hidden bg-white/70 backdrop-blur-md border border-white/60 hover:bg-white/90 text-[#1f2a1d] text-sm font-medium px-4 py-2 rounded-full transition-colors text-center inline-block flex items-center justify-center">
             Register
           </Link>
-          <button onClick={onOpenWaitlist} className="lg:hidden bg-white/70 backdrop-blur-md border border-white/60 hover:bg-white/90 text-[#1f2a1d] text-sm font-medium px-4 py-2 rounded-full transition-colors">
-            Join Waitlist
-          </button>
           <button
             onClick={() => setMenuOpen((v) => !v)}
             className="lg:hidden relative flex items-center justify-center w-10 h-10 rounded-full bg-white/70 backdrop-blur-md border border-white/60 text-[#1f2a1d] transition-all duration-300 hover:bg-white/90"
@@ -163,12 +160,9 @@ export default function Navbar({ navOnLight, hideNav, onOpenWaitlist }: NavbarPr
               <LogIn className="w-4 h-4" strokeWidth={1.95} />
               Sign In
             </Link>
-            <Link to="/register" className="flex items-center gap-2 text-sm font-medium text-[#2d3a2a]" onClick={() => setMenuOpen(false)}>
+            <Link to="/register" onClick={() => setMenuOpen(false)} className="mt-2 bg-[#1f2a1d] hover:bg-[#2a3827] text-white text-sm font-semibold px-5 py-3 rounded-full transition-colors text-center">
               Register
             </Link>
-            <button onClick={() => { setMenuOpen(false); onOpenWaitlist(); }} className="mt-2 bg-[#1f2a1d] hover:bg-[#2a3827] text-white text-sm font-semibold px-5 py-3 rounded-full transition-colors">
-              Join Waitlist
-            </button>
           </div>
         </div>
       </div>
