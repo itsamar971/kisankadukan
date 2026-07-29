@@ -120,7 +120,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const updateProfile = async (data: Partial<Pick<User, 'fullName' | 'mobile' | 'location' | 'landSurveyNumber'>>) => {
     if (!user) return { success: false, error: 'Not authenticated' };
     try {
-      const { data: responseData } = await api.post('/users/sync', data);
+      await api.post('/users/sync', data);
       setUser({
         ...user,
         ...data,

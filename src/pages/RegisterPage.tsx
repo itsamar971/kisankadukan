@@ -2,52 +2,10 @@ import { useState, useEffect, useRef } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import {
-  Eye, EyeOff, ArrowRight, Leaf, ShoppingCart, Tractor,
-  CheckCircle2, MapPin, Phone, Mail, User, FileText
+  Eye, EyeOff, ShoppingCart, Tractor,
+  MapPin, User
 } from 'lucide-react';
 import { LumaSpin } from '../components/ui/LumaSpin';
-
-/* ── Role card ── */
-function RoleCard({
-  role, selected, onSelect, icon, title, perks
-}: {
-  role: 'buyer' | 'farmer';
-  selected: boolean;
-  onSelect: () => void;
-  icon: React.ReactNode;
-  title: string;
-  perks: string[];
-}) {
-  return (
-    <button
-      type="button"
-      className={`kkv2-role-card ${selected ? 'kkv2-role-card--active' : ''}`}
-      onClick={onSelect}
-      aria-pressed={selected}
-    >
-      <div className="kkv2-role-card-header">
-        <div className={`kkv2-role-card-icon ${selected ? 'kkv2-role-card-icon--active' : ''}`}>
-          {icon}
-        </div>
-        <div>
-          <div className="kkv2-role-card-title">{title}</div>
-          {selected && <div className="kkv2-role-card-badge">Selected</div>}
-        </div>
-        <div className={`kkv2-role-card-radio ${selected ? 'kkv2-role-card-radio--on' : ''}`}>
-          {selected && <div className="kkv2-role-card-radio-dot" />}
-        </div>
-      </div>
-      <ul className="kkv2-role-card-perks">
-        {perks.map((p, i) => (
-          <li key={i}>
-            <CheckCircle2 size={12} />
-            {p}
-          </li>
-        ))}
-      </ul>
-    </button>
-  );
-}
 
 /* ── Step indicator ── */
 function StepDots({ total, current }: { total: number; current: number }) {
@@ -72,7 +30,6 @@ export default function RegisterPage() {
   const [agreed, setAgreed] = useState(false);
   const [error, setError] = useState('');
   const [focused, setFocused] = useState<string | null>(null);
-  const [mounted, setMounted] = useState(false);
   const [showSplash, setShowSplash] = useState(true);
   const [step, setStep] = useState(0); // 0=role, 1=details, 2=security
 
@@ -90,7 +47,6 @@ export default function RegisterPage() {
   const totalSteps = 3;
 
   useEffect(() => { 
-    setMounted(true); 
     const timer = setTimeout(() => setShowSplash(false), 2000);
     return () => clearTimeout(timer);
   }, []);
@@ -133,14 +89,14 @@ export default function RegisterPage() {
     const res = await register(email, password, role, {
       fullName, mobile, location,
       landSurveyNumber: role === 'farmer' ? landSurveyNumber : undefined,
-      coordinates, // Passed to backend
+      coordinates: coordinates ? `${coordinates.lat},${coordinates.lng}` : undefined, // Passed to backend
       profilePhoto: profilePhoto?.name, // In real app, upload this file
     });
     if (res.success) navigate('/dashboard');
     else setError(res.error || 'Failed to create account.');
   };
 
-  const isFinalStep = step === totalSteps - 1;
+
   const stepLabels = ['Choose Role', 'Your Details', 'Account Security'];
 
   if (showSplash) {
@@ -223,7 +179,7 @@ export default function RegisterPage() {
                   <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', marginBottom: 24 }}>
                     <div 
                       onClick={() => photoInputRef.current?.click()}
-                      style={{ width: 80, height: 80, borderRadius: '50%', background: '#f8faf7', border: '2px dashed #d0ccc6', display: 'flex', alignItems: 'center', justifyContents: 'center', cursor: 'pointer', overflow: 'hidden' }}
+                      style={{ width: 80, height: 80, borderRadius: '50%', background: '#f8faf7', border: '2px dashed #d0ccc6', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', overflow: 'hidden' }}
                     >
                       {profilePhoto ? (
                         <img src={URL.createObjectURL(profilePhoto)} alt="Profile" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />

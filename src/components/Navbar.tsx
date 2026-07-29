@@ -5,10 +5,9 @@ import { Link, useLocation } from 'react-router-dom';
 interface NavbarProps {
   navOnLight: boolean;
   hideNav: boolean;
-  onOpenWaitlist: () => void;
 }
 
-export default function Navbar({ navOnLight, hideNav, onOpenWaitlist }: NavbarProps) {
+export default function Navbar({ navOnLight, hideNav }: NavbarProps) {
   const [menuOpen, setMenuOpen] = useState(false);
   const location = useLocation();
 

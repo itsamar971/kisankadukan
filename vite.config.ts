@@ -10,6 +10,6 @@ export default defineConfig({
     },
   },
   server: {
-    historyApiFallback: true,
-  },
+    port: 5173
+  }
 })

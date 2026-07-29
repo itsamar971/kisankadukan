@@ -1,18 +1,18 @@
 import { useState, useRef, Fragment, useEffect } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import {
-  Leaf, LayoutDashboard, Package, ShoppingCart, TrendingUp,
-  Users, Bell, Settings, LogOut, ChevronRight, ChevronDown, Plus,
+  Leaf, Package, ShoppingCart, TrendingUp,
+  Users, Bell, Settings, LogOut, ChevronRight, Plus,
   MapPin, Phone, Mail, Star, ArrowUpRight, ArrowDownRight,
-  Wheat, Truck, CheckCircle2, Clock, BarChart3, Sprout,
-  IndianRupee, Search, Filter, Download, Edit2, Trash2, Eye,
-  User, Save, AlertCircle, Tractor, FileText, Calendar, Package2,
-  MessageSquare, Sparkles, ArrowRight, Apple, Target, Zap, Shield, Home, Upload
+  Wheat, Truck, CheckCircle2, Clock, Sprout,
+  IndianRupee, Search, Download, 
+  User, AlertCircle, FileText, Package2,
+  MessageSquare, Sparkles, ArrowRight, Apple, Zap, Shield, Home, Upload
 } from 'lucide-react';
-import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
+// import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { updatePassword } from 'firebase/auth';
-import { storage, auth } from '../firebase';
+import { auth } from '../firebase';
 
 /* ═══════════════════════════ API DATA TYPES ═══════════════════════════ */
 import { api } from '../lib/api';
@@ -525,8 +525,8 @@ function FarmerDashboardView({ onNavigate }: { onNavigate?: (navId: string) => v
   const activeBuyersCount = connectedBuyers.length;
   
   // Verification Logic
-  const needsVerification = user?.lastVerifiedAt 
-    ? Date.now() - new Date(user.lastVerifiedAt).getTime() > 30 * 24 * 60 * 60 * 1000 
+  const needsVerification = (user as any)?.lastVerifiedAt 
+    ? Date.now() - new Date((user as any).lastVerifiedAt).getTime() > 30 * 24 * 60 * 60 * 1000 
     : true;
   const [showVerificationModal, setShowVerificationModal] = useState(needsVerification);
   const [verifyFile, setVerifyFile] = useState<File | null>(null);
@@ -543,7 +543,7 @@ function FarmerDashboardView({ onNavigate }: { onNavigate?: (navId: string) => v
           await api.post('/users/verify', { imageBase64: base64Data });
           
           if (user) {
-            user.lastVerifiedAt = new Date().toISOString();
+            (user as any).lastVerifiedAt = new Date().toISOString();
           }
           setShowVerificationModal(false);
           setVerifyLoading(false);
@@ -849,8 +849,8 @@ function FarmerListingsView() {
     }
   };
 
-  const handleDelete = (id: number) => setListings(prev => prev.filter(l => l.id !== id));
-  const toggleStatus = (id: number) => setListings(prev => prev.map(l =>
+  const _handleDelete = (id: number) => setListings(prev => prev.filter(l => l.id !== id));
+  const _toggleStatus = (id: number) => setListings(prev => prev.map(l =>
     l.id === id ? { ...l, status: l.status === 'active' ? 'sold' : 'active' as ListingStatus } : l
   ));
 
@@ -1219,15 +1219,15 @@ function TrackingView({ order, role, onBack, onOrderUpdate }: { order: any; role
 function OrdersView({ orders, role, isEmbedded }: { orders: Order[]; role: 'farmer' | 'buyer', isEmbedded?: boolean }) {
   const [filter, setFilter] = useState('all');
   const [trackingOrder, setTrackingOrder] = useState<any>(null);
-  const [exportState, setExportState] = useState<'idle'|'loading'|'done'>('idle');
+  const [_exportState, _setExportState] = useState<'idle'|'loading'|'done'>('idle');
   const tabs = ['all', 'processing', 'dispatched', 'delivered', 'cancelled'];
 
   if (trackingOrder) {
     return <TrackingView order={trackingOrder} role={role} onBack={() => setTrackingOrder(null)} onOrderUpdate={(id, status, rating) => {
       const o = orders.find(x => x.id === id);
       if (o) {
-        o.status = status;
-        if (rating) o.rating = rating;
+        o.status = status as any;
+        if (rating) (o as any).rating = rating;
       }
     }} />;
   }
@@ -1583,7 +1583,7 @@ function RingChart({ pct, color, dashed, label, value }: {
 }) {
   const r = 28;
   const circ = 2 * Math.PI * r;
-  const offset = circ - (pct / 100) * circ;
+  const _offset = circ - (pct / 100) * circ;
   return (
     <div className="dsh-ring-wrap">
       <div className="dsh-ring-svg-wrap">
@@ -1611,7 +1611,7 @@ function RingChart({ pct, color, dashed, label, value }: {
 /* Circular arc progress */
 function CircularProgress({ pct }: { pct: number }) {
   const r = 56; const circ = 2 * Math.PI * r;
-  const offset = circ - (pct / 100) * circ;
+  const _offset = circ - (pct / 100) * circ;
   return (
     <div className="dsh-circ-wrap">
       <svg width="144" height="144" viewBox="0 0 144 144">
@@ -2219,7 +2219,7 @@ function RadarScannerModal({ onClose }: { onClose: () => void }) {
 function BrowseView({ onCheckout, onProductClick, onAddToCart, onRemoveFromCart, cart }: { onCheckout?: (item?: any) => void, onProductClick?: (item: any) => void, onAddToCart?: (item: any) => void, onRemoveFromCart?: (item: any) => void, cart?: any[] }) {
   const [search, setSearch] = useState('');
   const [category, setCategory] = useState('All');
-  const [radius60, setRadius60] = useState(false);
+  const [radius60, _setRadius60] = useState(false);
   const [products, setProducts] = useState<any[]>([]);
   const categories = ['All', 'Vegetables', 'Fruits', 'Grains', 'Spices', 'Dairy'];
   
@@ -2365,7 +2365,7 @@ function FarmersView() {
               </div>
             </div>
             <div style={{ display:'flex', flexWrap:'wrap', gap:6, marginBottom:12 }}>
-              {f.crops.map(c => (
+              {f.crops.map((c: any) => (
                 <span key={c} style={{ background:'#f0fdf4', border:'1px solid #bbf7d0', color:'#15803d', fontSize:11, fontWeight:600, padding:'3px 9px', borderRadius:20 }}>
                   {c}
                 </span>

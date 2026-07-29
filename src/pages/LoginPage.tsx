@@ -1,7 +1,7 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { Eye, EyeOff, Leaf } from 'lucide-react';
+import { Eye, EyeOff } from 'lucide-react';
 
 export default function LoginPage() {
   const { login, isLoading } = useAuth();
