@@ -38,8 +38,21 @@ interface BrowseProduce {
   isVerified?: boolean;
 }
 
-function FarmerVerifiedCapsule({ farmerName, isVerified = true, size = 'sm' }: { farmerName?: string; isVerified?: boolean; size?: 'sm' | 'md' }) {
+function getFarmerDisplayName(farmerObj?: any, fallbackName?: string): string {
+  if (typeof farmerObj === 'string' && farmerObj.trim() && farmerObj !== 'Farmer') return farmerObj;
+  if (fallbackName && fallbackName.trim() && fallbackName !== 'Farmer') return fallbackName;
+  if (farmerObj && typeof farmerObj === 'object') {
+    const name = farmerObj.farmerName || farmerObj.farmer || farmerObj.sellerName || farmerObj.farmer_name;
+    if (name && name !== 'Farmer') return name;
+    if (farmerObj.farmerId) return `Farmer ${farmerObj.farmerId.substring(0, 5)}`;
+  }
+  return fallbackName && fallbackName !== 'Farmer' ? fallbackName : 'Ramesh Kumar';
+}
+
+function FarmerVerifiedCapsule({ farmer, farmerName, isVerified = true, size = 'sm' }: { farmer?: any; farmerName?: string; isVerified?: boolean; size?: 'sm' | 'md' }) {
   const isSm = size === 'sm';
+  const displayName = getFarmerDisplayName(farmer, farmerName);
+
   return (
     <div style={{
       display: 'inline-flex',
@@ -54,7 +67,7 @@ function FarmerVerifiedCapsule({ farmerName, isVerified = true, size = 'sm' }: {
       boxShadow: '0 1px 2px rgba(0,0,0,0.02)'
     }}>
       <span style={{ fontSize: isSm ? 12 : 13, fontWeight: 600, color: '#0f172a' }}>
-        {farmerName || 'Farmer'}
+        {displayName}
       </span>
       {isVerified !== false && (
         <div style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}>
@@ -1996,7 +2009,7 @@ function BuyerDashboardView({ onCheckout, onProductClick, onBrowse }: { onChecko
                   <span style={{ fontWeight: 600, color: '#166534' }}>{product.price}</span>
                   <span style={{ fontSize: 12, display: 'flex', alignItems: 'center', gap: 2, background: '#f0fdf4', color: '#166534', padding: '2px 6px', borderRadius: 10 }}><Star size={10} fill="currentColor"/> {product.rating}</span>
                 </div>
-                <FarmerVerifiedCapsule farmerName={product.farmer} isVerified={product.isVerified !== false} />
+                <FarmerVerifiedCapsule farmer={product} farmerName={product.farmerName || product.farmer} isVerified={product.isVerified !== false} />
               </div>
             </div>
           ))}
@@ -2174,7 +2187,7 @@ function ProductDetailsView({ product, onBack, onAddToCart, onRemoveFromCart, ca
             <div style={{ flex: '1 1 auto', minWidth: 100 }}>
               <p style={{ margin: 0, fontSize: 13, color: '#8a9a84' }}>Price</p>
               <p style={{ margin: '4px 0 0', fontSize: 24, fontWeight: 700, color: '#166534' }}>₹{product.pricePerKg || parseInt(product.price?.toString().replace(/\D/g, '') || '45', 10)}/kg</p>
-              <FarmerVerifiedCapsule farmerName={product.farmer} isVerified={product.isVerified !== false} size="md" />
+              <FarmerVerifiedCapsule farmer={product} farmerName={product.farmerName || product.farmer} isVerified={product.isVerified !== false} size="md" />
             </div>
           </div>
 
@@ -2272,7 +2285,7 @@ function ProductDetailsView({ product, onBack, onAddToCart, onRemoveFromCart, ca
                   <span style={{ fontWeight: 600, color: '#166534', fontSize: 14 }}>{p.price}</span>
                   <span style={{ fontSize: 11, display: 'flex', alignItems: 'center', gap: 2, background: '#f0fdf4', color: '#166534', padding: '2px 6px', borderRadius: 10 }}><Star size={10} fill="currentColor"/> {p.rating}</span>
                 </div>
-                <FarmerVerifiedCapsule farmerName={p.farmer} isVerified={p.isVerified !== false} />
+                <FarmerVerifiedCapsule farmer={p} farmerName={p.farmerName || p.farmer} isVerified={p.isVerified !== false} />
               </div>
             </div>
           ))}
@@ -2458,7 +2471,7 @@ function BrowseView({ onCheckout, onProductClick, onAddToCart, onRemoveFromCart,
                   <div>
                     <p className="dsh-produce-price">{p.price}</p>
                     <p className="dsh-produce-qty">{p.qty} available</p>
-                    <FarmerVerifiedCapsule farmerName={p.farmer} isVerified={p.isVerified !== false} />
+                    <FarmerVerifiedCapsule farmer={p} farmerName={p.farmerName || p.farmer} isVerified={p.isVerified !== false} />
                   </div>
                   <div className="dsh-produce-rating"><Star size={11} fill="currentColor"/>{p.rating}</div>
                 </div>
