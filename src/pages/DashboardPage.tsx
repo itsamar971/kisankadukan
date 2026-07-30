@@ -525,10 +525,15 @@ function FarmerDashboardView({ onNavigate }: { onNavigate?: (navId: string) => v
   const activeBuyersCount = connectedBuyers.length;
   
   // Verification Logic
-  const needsVerification = (user as any)?.lastVerifiedAt 
-    ? Date.now() - new Date((user as any).lastVerifiedAt).getTime() > 30 * 24 * 60 * 60 * 1000 
-    : true;
-  const [showVerificationModal, setShowVerificationModal] = useState(needsVerification);
+  const lastVerifiedDate = (user as any)?.lastVerifiedAt ? new Date((user as any).lastVerifiedAt).getTime() : 0;
+  const daysSinceVerified = (Date.now() - lastVerifiedDate) / (1000 * 60 * 60 * 24);
+  const isVerified = (user as any)?.isVerified;
+  const isPendingReview = (user as any)?.verificationStatus === 'pending';
+
+  // Only require verification if NOT verified and NOT pending review, OR if 30 days have passed
+  const needsVerification = (!isVerified && !isPendingReview) || daysSinceVerified > 30;
+
+  const [showVerificationModal, setShowVerificationModal] = useState(false);
   const [verifyFile, setVerifyFile] = useState<File | null>(null);
   const [verifyLoading, setVerifyLoading] = useState(false);
 
@@ -544,9 +549,11 @@ function FarmerDashboardView({ onNavigate }: { onNavigate?: (navId: string) => v
           
           if (user) {
             (user as any).lastVerifiedAt = new Date().toISOString();
+            (user as any).verificationStatus = 'pending';
           }
           setShowVerificationModal(false);
           setVerifyLoading(false);
+          alert('Crop verification photo uploaded! Awaiting admin review.');
         } catch (err: any) {
           console.error(err);
           const backendError = err.response?.data?.error || err.message;

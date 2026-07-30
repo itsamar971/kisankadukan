@@ -14,6 +14,9 @@ export interface User {
   coordinates?: string;
   profilePhoto?: string;
   joinedAt: string;
+  lastVerifiedAt?: string;
+  isVerified?: boolean;
+  verificationStatus?: string;
 }
 
 interface AuthContextType {
@@ -50,7 +53,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             mobile: data.user.mobile || '',
             location: data.user.location || '',
             landSurveyNumber: data.user.landSurveyNumber || '',
-            joinedAt: data.user.createdAt || new Date().toISOString()
+            joinedAt: data.user.createdAt || new Date().toISOString(),
+            lastVerifiedAt: data.user.lastVerifiedAt,
+            isVerified: data.user.isVerified,
+            verificationStatus: data.user.verificationStatus
           });
         } catch (error) {
           console.error("Failed to sync user data", error);
@@ -106,7 +112,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         mobile: details.mobile,
         location: details.location,
         landSurveyNumber: details.landSurveyNumber,
-        joinedAt: data.user.createdAt
+        joinedAt: data.user.createdAt,
+        lastVerifiedAt: data.user.lastVerifiedAt,
+        isVerified: data.user.isVerified,
+        verificationStatus: data.user.verificationStatus
       });
 
       setIsLoading(false);
