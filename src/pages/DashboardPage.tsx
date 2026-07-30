@@ -13,6 +13,7 @@ import {
 // import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { updatePassword } from 'firebase/auth';
 import { auth } from '../firebase';
+import { LumaSpin } from '../components/ui/LumaSpin';
 
 /* ═══════════════════════════ API DATA TYPES ═══════════════════════════ */
 import { api } from '../lib/api';
@@ -211,7 +212,10 @@ function NotificationsView() {
       </div>
       <div className="dsh-card">
         {loading ? (
-          <div style={{padding: 40, textAlign: 'center', color: '#8a9a84'}}>Loading notifications...</div>
+          <div style={{padding: 40, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 12, color: '#8a9a84'}}>
+            <LumaSpin size={40} />
+            <span style={{ fontSize: 13, fontWeight: 500 }}>Loading notifications...</span>
+          </div>
         ) : notifs.length === 0 ? (
           <div style={{padding: 40, textAlign: 'center', color: '#8a9a84'}}>No notifications</div>
         ) : notifs.map((n, i) => (
@@ -893,7 +897,14 @@ function FarmerDashboardView({ onNavigate }: { onNavigate?: (navId: string) => v
             </div>
 
             <button className="dsh-cta-btn" style={{ width: '100%', justifyContent: 'center', padding: '14px' }} onClick={handleVerifySubmit} disabled={verifyLoading || !verifyFile}>
-              {verifyLoading ? 'Uploading...' : 'Upload & Verify'} <Upload size={16} style={{ marginLeft: 6 }} />
+              {verifyLoading ? (
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                  <LumaSpin size={18} color="#fff" />
+                  <span>Uploading...</span>
+                </div>
+              ) : (
+                <>Upload & Verify <Upload size={16} style={{ marginLeft: 6 }} /></>
+              )}
             </button>
           </div>
         </div>
@@ -1265,7 +1276,12 @@ function TrackingView({ order, role, onBack, onOrderUpdate }: { order: any; role
             </label>
 
             <button className="dsh-cta-btn" style={{ width: '100%', justifyContent: 'center' }} onClick={handleDispatch} disabled={dispatchLoading}>
-              {dispatchLoading ? 'Dispatching...' : 'Confirm Dispatch'}
+              {dispatchLoading ? (
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                  <LumaSpin size={18} color="#fff" />
+                  <span>Dispatching...</span>
+                </div>
+              ) : 'Confirm Dispatch'}
             </button>
           </div>
         </div>
@@ -1293,7 +1309,12 @@ function TrackingView({ order, role, onBack, onOrderUpdate }: { order: any; role
             </div>
 
             <button className="dsh-cta-btn" style={{ width: '100%', justifyContent: 'center' }} onClick={handleSubmitReview} disabled={reviewLoading}>
-              {reviewLoading ? 'Submitting...' : 'Submit Review'}
+              {reviewLoading ? (
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                  <LumaSpin size={18} color="#fff" />
+                  <span>Submitting...</span>
+                </div>
+              ) : 'Submit Review'}
             </button>
           </div>
         </div>
@@ -2852,7 +2873,7 @@ function AboutView({ onBack }: { onBack: () => void }) {
   return (
     <div className="sv-page" style={{ height: '100vh', overflowY: 'auto', paddingBottom: 120, display:'flex', flexDirection:'column', alignItems:'center', paddingTop: 60 }}>
       <div style={{ width: 80, height: 80, background: '#166534', borderRadius: 20, display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 20 }}>
-        <Leaf size={40} color="#fff" />
+        <span style={{ color: '#fff', fontWeight: 900, fontSize: 26, letterSpacing: '-0.5px' }}>KKD</span>
       </div>
       <h1 style={{ fontSize: 24, fontWeight: 800, color: '#111827', margin: 0 }}>KisanKaDukan</h1>
       <p style={{ color: '#64748b', fontSize: 14, marginTop: 8 }}>Version 1.0.4 (Build 204)</p>
@@ -3451,7 +3472,7 @@ export default function DashboardPage() {
       {/* ── WHITE SIDEBAR (desktop only) ── */}
       <aside className="dsh-sidebar">
         <div className="dsh-sidebar-logo">
-          <div className="dsh-sidebar-logo-icon"><Leaf size={16} strokeWidth={2.5}/></div>
+          <div className="dsh-sidebar-logo-icon"><span className="font-extrabold text-[12px] tracking-tight text-[#16a34a]">KKD</span></div>
           <span className="dsh-sidebar-logo-text">KisanKaDukan</span>
         </div>
 
@@ -3509,7 +3530,7 @@ export default function DashboardPage() {
         <header className="dsh-topbar">
           {/* Mobile: brand logo left, current page title center */}
           <div className="dsh-topbar-mobile-brand">
-            <div className="dsh-sidebar-logo-icon" style={{ width:28, height:28, borderRadius:8 }}><Leaf size={14} strokeWidth={2.5}/></div>
+            <div className="dsh-sidebar-logo-icon" style={{ width:28, height:28, borderRadius:8 }}><span className="font-extrabold text-[11px] tracking-tight text-[#16a34a]">KKD</span></div>
           </div>
 
           {/* Mobile page title / Desktop section titles */}

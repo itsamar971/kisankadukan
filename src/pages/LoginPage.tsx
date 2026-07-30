@@ -3,6 +3,8 @@ import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { Eye, EyeOff } from 'lucide-react';
 
+import { LumaSpin } from '../components/ui/LumaSpin';
+
 export default function LoginPage() {
   const { login, isLoading } = useAuth();
   const navigate = useNavigate();
@@ -118,9 +120,16 @@ export default function LoginPage() {
                 type="submit"
                 id="signin-submit-btn"
                 disabled={isLoading}
-                className="uui-btn-primary"
+                className="uui-btn-primary flex items-center justify-center gap-2"
               >
-                {isLoading ? 'Signing in...' : 'Sign in'}
+                {isLoading ? (
+                  <div className="flex items-center justify-center gap-2">
+                    <LumaSpin size={18} color="#ffffff" />
+                    <span>Signing in...</span>
+                  </div>
+                ) : (
+                  'Sign in'
+                )}
               </button>
 
               {/* Google SSO Button */}

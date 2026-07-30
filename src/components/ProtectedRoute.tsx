@@ -1,5 +1,6 @@
 import { Navigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import { LumaSpin } from './ui/LumaSpin';
 
 export default function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const { user, isLoading } = useAuth();
@@ -11,11 +12,7 @@ export default function ProtectedRoute({ children }: { children: React.ReactNode
         minHeight: '100vh', display: 'flex', alignItems: 'center',
         justifyContent: 'center', background: '#071a05'
       }}>
-        <span style={{
-          width: 28, height: 28, border: '2.5px solid rgba(134,239,172,0.2)',
-          borderTopColor: '#86efac', borderRadius: '50%',
-          display: 'inline-block', animation: 'kkv2Spin 0.7s linear infinite'
-        }} />
+        <LumaSpin size={60} color="#86efac" />
       </div>
     );
   }

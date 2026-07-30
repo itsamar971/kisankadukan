@@ -343,9 +343,16 @@ export default function RegisterPage() {
                     type="submit"
                     id="register-submit-btn"
                     disabled={isLoading}
-                    className="uui-btn-primary"
+                    className="uui-btn-primary flex items-center justify-center gap-2"
                   >
-                    {isLoading ? 'Creating account...' : 'Create account'}
+                    {isLoading ? (
+                      <div className="flex items-center justify-center gap-2">
+                        <LumaSpin size={18} color="#ffffff" />
+                        <span>Creating account...</span>
+                      </div>
+                    ) : (
+                      'Create account'
+                    )}
                   </button>
                 </div>
               </form>

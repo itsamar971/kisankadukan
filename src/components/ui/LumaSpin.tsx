@@ -1,8 +1,29 @@
-export const LumaSpin = () => {
+interface LumaSpinProps {
+  size?: number;
+  className?: string;
+  color?: string;
+}
+
+export const LumaSpin = ({ size = 65, className = '', color = '#166534' }: LumaSpinProps) => {
+  const scale = size / 65;
   return (
-    <div className="relative w-[65px] aspect-square">
-      <span className="absolute rounded-[50px] animate-loaderAnim shadow-[inset_0_0_0_3px] shadow-[#166534]" />
-      <span className="absolute rounded-[50px] animate-loaderAnim animation-delay shadow-[inset_0_0_0_3px] shadow-[#166534]" />
+    <div
+      className={`relative aspect-square flex items-center justify-center ${className}`}
+      style={{
+        width: size,
+        height: size,
+        transform: scale !== 1 ? `scale(${scale})` : undefined,
+        transformOrigin: 'center center',
+      }}
+    >
+      <span
+        className="absolute rounded-[50px] animate-loaderAnim"
+        style={{ boxShadow: `inset 0 0 0 3px ${color}` }}
+      />
+      <span
+        className="absolute rounded-[50px] animate-loaderAnim animation-delay"
+        style={{ boxShadow: `inset 0 0 0 3px ${color}` }}
+      />
       <style>{`
         @keyframes loaderAnim {
           0% {
