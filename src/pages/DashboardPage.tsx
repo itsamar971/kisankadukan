@@ -645,9 +645,14 @@ function FarmerDashboardView({ onNavigate }: { onNavigate?: (navId: string) => v
               <p className="dsh-hero-sub">
                 Track orders, monitor revenue, manage buyers, and increase your sales.
               </p>
-              <button className="dsh-hero-cta" onClick={() => onNavigate && onNavigate('listings')}>
-                Manage Listings <ArrowRight size={14} />
-              </button>
+              <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
+                <button className="dsh-hero-cta" onClick={() => onNavigate && onNavigate('listings')}>
+                  Manage Listings <ArrowRight size={14} />
+                </button>
+                <button className="dsh-hero-cta" style={{ background: 'rgba(255, 255, 255, 0.15)', backdropFilter: 'blur(4px)', border: '1px solid rgba(255, 255, 255, 0.2)' }} onClick={() => setShowVerificationModal(true)}>
+                  <Shield size={14} /> Crop Verification
+                </button>
+              </div>
             </div>
           </div>
 
