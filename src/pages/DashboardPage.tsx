@@ -36,7 +36,7 @@ interface BrowseProduce {
   rating: number; qty: string; img: string; badge: string; category: string; phone: string;
 }
 
-function FarmerMessagesView() {
+function MessagesView() {
   const [messages, setMessages] = useState<any[]>([]);
   const [input, setInput] = useState('');
   const [sending, setSending] = useState(false);
