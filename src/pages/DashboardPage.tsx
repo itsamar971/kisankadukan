@@ -2180,7 +2180,7 @@ function ProductDetailsView({ product, onBack, onAddToCart, onRemoveFromCart, ca
             <h1 style={{ fontSize: 28, margin: 0, color: '#111827', fontWeight: 700 }}>{product.name}</h1>
             <span style={{ background: '#f0fdf4', color: '#166534', padding: '4px 8px', borderRadius: 8, fontSize: 12, fontWeight: 600 }}>{product.badge || 'Fresh'}</span>
           </div>
-          <p style={{ margin: '0 0 16px 0', color: '#8a9a84', fontSize: 16, display: 'flex', alignItems: 'center', gap: 6 }}><Sprout size={16}/> {getFarmerDisplayName(product, product.farmerName || product.farmer)} &middot; <MapPin size={14}/> {product.loc || 'Punjab'}</p>
+          <p style={{ margin: '0 0 16px 0', color: '#8a9a84', fontSize: 16, display: 'flex', alignItems: 'center', gap: 6 }}><Sprout size={16}/> {getFarmerDisplayName(product, product.farmerName || product.farmer)} &middot; <MapPin size={14}/> {product.loc || product.location || product.city || 'Ludhiana, Punjab'}</p>
           
           <div style={{ display: 'flex', gap: 16, marginBottom: 24, paddingBottom: 24, borderBottom: '1px solid #ece9e3', flexWrap: 'wrap' }}>
             <div style={{ flex: '1 1 auto', minWidth: 100 }}>
@@ -2193,7 +2193,7 @@ function ProductDetailsView({ product, onBack, onAddToCart, onRemoveFromCart, ca
           <div style={{ marginBottom: 24 }}>
             <h3 style={{ fontSize: 16, fontWeight: 600, margin: '0 0 8px 0' }}>Product Description</h3>
             <p style={{ color: '#4b5563', lineHeight: 1.6, fontSize: 14 }}>
-              Freshly harvested {product.name.toLowerCase()} sourced directly from {product.farmer}'s farm in {product.loc}. 
+              Freshly harvested {product.name.toLowerCase()} sourced directly from {getFarmerDisplayName(product, product.farmerName || product.farmer)}'s farm in {product.loc || product.location || product.city || 'Ludhiana, Punjab'}. 
               Grown with sustainable farming practices, ensuring the highest quality and taste. 
               Perfect for your daily needs and bulk orders.
             </p>
@@ -2461,7 +2461,7 @@ function BrowseView({ onCheckout, onProductClick, onAddToCart, onRemoveFromCart,
             </div>
             <div className="dsh-produce-card-body">
               <h3 className="dsh-produce-name">{p.name}</h3>
-              <p className="dsh-produce-farmer"><Sprout size={11}/>{getFarmerDisplayName(p, p.farmerName || p.farmer)} · {p.loc || 'Punjab'}</p>
+              <p className="dsh-produce-farmer"><Sprout size={11}/>{getFarmerDisplayName(p, p.farmerName || p.farmer)} · {p.loc || p.location || p.city || 'Ludhiana, Punjab'}</p>
               <div style={{ display:'flex', alignItems:'center', gap:6, marginBottom:10, fontSize:12, color:'#8a9a84' }}>
                 <Phone size={11}/>{p.phone}
               </div>
