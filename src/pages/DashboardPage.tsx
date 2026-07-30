@@ -729,7 +729,7 @@ function FarmerDashboardView({ onNavigate }: { onNavigate?: (navId: string) => v
               </p>
               <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
                 <button className="dsh-hero-cta" onClick={() => onNavigate && onNavigate('listings')}>
-                  Manage Listings <ArrowRight size={14} />
+                  Manage Crops <ArrowRight size={14} />
                 </button>
                 <button className="dsh-hero-cta" style={{ background: 'rgba(255, 255, 255, 0.15)', backdropFilter: 'blur(4px)', border: '1px solid rgba(255, 255, 255, 0.2)' }} onClick={() => setShowVerificationModal(true)}>
                   <Shield size={14} /> Crop Verification
@@ -746,7 +746,7 @@ function FarmerDashboardView({ onNavigate }: { onNavigate?: (navId: string) => v
                 <span className="dsh-saas-growth">+1 this week</span>
               </div>
               <p className="dsh-saas-stat-num">{activeListingsCount}</p>
-              <p className="dsh-saas-stat-label">Active Listings</p>
+              <p className="dsh-saas-stat-label">Active Crops</p>
             </div>
 
             <div className="dsh-saas-stat">
@@ -944,20 +944,20 @@ function FarmerListingsView() {
   return (
     <div className="flex flex-col font-['Outfit',sans-serif] pb-24 w-full">
       <div className="px-6 py-6 max-w-4xl mx-auto w-full">
-        <h2 className="text-[26px] font-extrabold text-[#001f3f] tracking-tight mb-1">My Listings</h2>
-        <p className="text-[#8a9a84] text-[15px] mb-8 font-medium">Manage your produce listings and inventory.</p>
+        <h2 className="text-[26px] font-extrabold text-[#001f3f] tracking-tight mb-1">My Crops</h2>
+        <p className="text-[#8a9a84] text-[15px] mb-8 font-medium">Manage your crop listings and inventory.</p>
 
         <button 
           onClick={() => setShowAdd(v => !v)}
           className="w-full bg-[#16a34a] text-white rounded-[16px] py-4 font-semibold text-[15px] flex items-center justify-center gap-2 hover:bg-[#15803d] transition-all active:scale-[0.98] mb-8 shadow-sm"
         >
-          <Plus size={18} strokeWidth={2.5} /> {showAdd ? 'Cancel' : 'Add New Listing'}
+          <Plus size={18} strokeWidth={2.5} /> {showAdd ? 'Cancel' : 'Add Crop'}
         </button>
 
         {/* Add Form */}
         {showAdd && (
           <div className="bg-white rounded-[24px] p-6 border border-gray-100 shadow-[0_4px_30px_rgba(0,0,0,0.03)] mb-8 animate-[kkv2FadeUp_0.3s_ease]">
-            <h3 className="text-lg font-bold text-[#001f3f] mb-5">Add New Produce</h3>
+            <h3 className="text-lg font-bold text-[#001f3f] mb-5">Add New Crop</h3>
             <div className="flex flex-col gap-5">
               <div className="flex flex-col gap-2">
                 <label className="text-[13px] font-bold text-gray-500 uppercase tracking-wider">Produce Name</label>
@@ -985,7 +985,7 @@ function FarmerListingsView() {
               </div>
             </div>
             <button className="w-full bg-[#001f3f] text-white rounded-xl py-3 font-semibold mt-8 hover:bg-gray-800 transition-colors" onClick={handleAdd}>
-              Save Listing
+              Save Crop
             </button>
           </div>
         )}
@@ -3044,7 +3044,7 @@ function ProfileView() {
 
 const farmerNav = [
   { icon:<Home size={16}/>, label:'Home', id:'dashboard' },
-  { icon:<Package size={16}/>,         label:'My Listings', id:'listings' },
+  { icon:<Package size={16}/>,         label:'My Crops',    id:'listings' },
   { icon:<ShoppingCart size={16}/>,    label:'Orders',     id:'orders'   },
   { icon:<IndianRupee size={16}/>,     label:'Revenue',    id:'revenue'  },
   { icon:<Users size={16}/>,           label:'Buyers',     id:'buyers'   },
@@ -3517,6 +3517,7 @@ export default function DashboardPage() {
             <p className="dsh-topbar-eyebrow">Good Evening 👋</p>
             <h1 className="dsh-topbar-title">
               {activeNav === 'dashboard' ? (isFarmer ? 'Farm Overview' : 'Buyer Dashboard') :
+               activeNav === 'listings' ? 'My Crops' :
                activeNav.charAt(0).toUpperCase() + activeNav.slice(1).replace('_', ' ')}
             </h1>
           </div>
@@ -3524,6 +3525,7 @@ export default function DashboardPage() {
           {/* Mobile-only centered title */}
           <div className="dsh-topbar-mobile-title">
             {activeNav === 'dashboard' ? 'Home' :
+             activeNav === 'listings' ? 'Crops' :
              activeNav.charAt(0).toUpperCase() + activeNav.slice(1).replace('_', ' ')}
           </div>
 
