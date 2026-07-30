@@ -35,6 +35,35 @@ interface Order {
 interface BrowseProduce {
   id: string; name: string; farmer: string; loc: string; price: string;
   rating: number; qty: string; img: string; badge: string; category: string; phone: string;
+  isVerified?: boolean;
+}
+
+function FarmerVerifiedCapsule({ farmerName, isVerified = true, size = 'sm' }: { farmerName?: string; isVerified?: boolean; size?: 'sm' | 'md' }) {
+  const isSm = size === 'sm';
+  return (
+    <div style={{
+      display: 'inline-flex',
+      alignItems: 'center',
+      gap: 6,
+      padding: isSm ? '4px 10px' : '6px 14px',
+      borderRadius: 9999,
+      background: '#f0fdf4',
+      border: '1px solid #bbf7d0',
+      marginTop: isSm ? 6 : 10,
+      width: 'fit-content',
+      boxShadow: '0 1px 2px rgba(0,0,0,0.02)'
+    }}>
+      <span style={{ fontSize: isSm ? 12 : 13, fontWeight: 600, color: '#0f172a' }}>
+        {farmerName || 'Farmer'}
+      </span>
+      {isVerified !== false && (
+        <div style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}>
+          <CheckCircle2 size={isSm ? 13 : 15} style={{ color: '#ffffff', fill: '#16a34a' }} />
+          <span style={{ fontSize: isSm ? 11 : 12, fontWeight: 700, color: '#166534' }}>(Verified)</span>
+        </div>
+      )}
+    </div>
+  );
 }
 
 function MessagesView() {
@@ -1962,9 +1991,12 @@ function BuyerDashboardView({ onCheckout, onProductClick, onBrowse }: { onChecko
                 <h3 style={{ margin: '8px 0 4px', fontSize: 16, color: '#111827' }}>{product.name}</h3>
                 <p style={{ margin: 0, fontSize: 13, color: '#8a9a84' }}>{product.farmer}</p>
               </div>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 'auto', paddingTop: 8 }}>
-                <span style={{ fontWeight: 600, color: '#166534' }}>{product.price}</span>
-                <span style={{ fontSize: 12, display: 'flex', alignItems: 'center', gap: 2, background: '#f0fdf4', color: '#166534', padding: '2px 6px', borderRadius: 10 }}><Star size={10} fill="currentColor"/> {product.rating}</span>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 4, marginTop: 'auto', paddingTop: 8 }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <span style={{ fontWeight: 600, color: '#166534' }}>{product.price}</span>
+                  <span style={{ fontSize: 12, display: 'flex', alignItems: 'center', gap: 2, background: '#f0fdf4', color: '#166534', padding: '2px 6px', borderRadius: 10 }}><Star size={10} fill="currentColor"/> {product.rating}</span>
+                </div>
+                <FarmerVerifiedCapsule farmerName={product.farmer} isVerified={product.isVerified !== false} />
               </div>
             </div>
           ))}
@@ -2142,6 +2174,7 @@ function ProductDetailsView({ product, onBack, onAddToCart, onRemoveFromCart, ca
             <div style={{ flex: '1 1 auto', minWidth: 100 }}>
               <p style={{ margin: 0, fontSize: 13, color: '#8a9a84' }}>Price</p>
               <p style={{ margin: '4px 0 0', fontSize: 24, fontWeight: 700, color: '#166534' }}>₹{product.pricePerKg || parseInt(product.price?.toString().replace(/\D/g, '') || '45', 10)}/kg</p>
+              <FarmerVerifiedCapsule farmerName={product.farmer} isVerified={product.isVerified !== false} size="md" />
             </div>
           </div>
 
@@ -2234,9 +2267,12 @@ function ProductDetailsView({ product, onBack, onAddToCart, onRemoveFromCart, ca
                 <h3 style={{ margin: '8px 0 4px', fontSize: 14, color: '#111827', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{p.name}</h3>
                 <p style={{ margin: 0, fontSize: 12, color: '#8a9a84' }}>{p.farmer}</p>
               </div>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 'auto', paddingTop: 8 }}>
-                <span style={{ fontWeight: 600, color: '#166534', fontSize: 14 }}>{p.price}</span>
-                <span style={{ fontSize: 11, display: 'flex', alignItems: 'center', gap: 2, background: '#f0fdf4', color: '#166534', padding: '2px 6px', borderRadius: 10 }}><Star size={10} fill="currentColor"/> {p.rating}</span>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 4, marginTop: 'auto', paddingTop: 8 }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <span style={{ fontWeight: 600, color: '#166534', fontSize: 14 }}>{p.price}</span>
+                  <span style={{ fontSize: 11, display: 'flex', alignItems: 'center', gap: 2, background: '#f0fdf4', color: '#166534', padding: '2px 6px', borderRadius: 10 }}><Star size={10} fill="currentColor"/> {p.rating}</span>
+                </div>
+                <FarmerVerifiedCapsule farmerName={p.farmer} isVerified={p.isVerified !== false} />
               </div>
             </div>
           ))}
@@ -2418,10 +2454,11 @@ function BrowseView({ onCheckout, onProductClick, onAddToCart, onRemoveFromCart,
                 <Phone size={11}/>{p.phone}
               </div>
               <div className="dsh-produce-footer" style={{ flexDirection: 'column', gap: 12, alignItems: 'stretch' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
                   <div>
                     <p className="dsh-produce-price">{p.price}</p>
                     <p className="dsh-produce-qty">{p.qty} available</p>
+                    <FarmerVerifiedCapsule farmerName={p.farmer} isVerified={p.isVerified !== false} />
                   </div>
                   <div className="dsh-produce-rating"><Star size={11} fill="currentColor"/>{p.rating}</div>
                 </div>
