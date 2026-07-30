@@ -3434,7 +3434,7 @@ export default function DashboardPage() {
         case 'dashboard': return <FarmerDashboardView onNavigate={handleNav} />;
         case 'listings':  return <FarmerListingsView />;
         case 'orders':    return <OrdersView orders={farmerOrders} role="farmer" />;
-        case 'revenue':   return <RevenueView />;
+        case 'revenue':   return <FarmerRevenueView />;
         case 'buyers':    return <BuyersView />;
         default:          return <FarmerDashboardView onNavigate={handleNav} />;
       }
@@ -3624,6 +3624,7 @@ export default function DashboardPage() {
             <span className="dsh-bottom-nav-label">{item.label}</span>
           </button>
         ))}
+      </nav>
       {/* Beautiful Top-Right Floating Live Broadcast Toast */}
       {activeToast && (
         <div style={{
