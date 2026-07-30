@@ -4840,6 +4840,13 @@ html {
 
   /* ── 8. CTA buttons ── */
   .dsh-cta-btn { width: 100% !important; justify-content: center !important; }
+  
+  /* Flex input containers button width reset */
+  div:has(> .dsh-form-input) > button,
+  div:has(> input) > button {
+    width: auto !important;
+    flex-shrink: 0 !important;
+  }
 
   /* ── 9. Reminder card — stack vertically on mobile ── */
   .dsh-reminder-card {

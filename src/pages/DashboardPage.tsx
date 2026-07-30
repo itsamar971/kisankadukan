@@ -119,16 +119,20 @@ function MessagesView() {
           ))}
           <div ref={endRef} />
         </div>
-        <div style={{ padding: '16px', borderTop: '1px solid #ece9e3', display: 'flex', gap: '12px' }}>
+        <div style={{ padding: '16px', borderTop: '1px solid #ece9e3', display: 'flex', gap: '12px', alignItems: 'center', width: '100%', boxSizing: 'border-box' }}>
           <input 
             className="dsh-form-input" 
             placeholder="Type your message..." 
-            style={{ flex: 1 }} 
+            style={{ flex: 1, minWidth: 0, width: '100%' }} 
             value={input}
             onChange={e => setInput(e.target.value)}
             onKeyDown={e => e.key === 'Enter' && handleSend()}
           />
-          <button className="dsh-cta-btn" style={{ width: 'auto', padding: '0 20px' }} onClick={handleSend}>
+          <button 
+            className="dsh-cta-btn" 
+            style={{ width: '48px', height: '42px', flexShrink: 0, padding: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }} 
+            onClick={handleSend}
+          >
             <ArrowRight size={16}/>
           </button>
         </div>
@@ -1434,7 +1438,42 @@ function OrdersView({ orders, role, isEmbedded }: { orders: Order[]; role: 'farm
   );
 }
 
-function RevenueView() {
+function getCategoryFromOrder(o: any): 'Vegetables' | 'Grains' | 'Fruits' | 'Spices' | 'Dairy' {
+  const cat = (o.category || '').toLowerCase();
+  const name = (o.productName || o.name || o.title || o.crop || o.items?.[0]?.name || o.items?.[0]?.title || '').toLowerCase();
+
+  if (
+    cat.includes('grain') || cat.includes('rice') || cat.includes('wheat') || cat.includes('paddy') || cat.includes('dal') || cat.includes('pulse') || cat.includes('millet') || cat.includes('cereal') ||
+    name.includes('rice') || name.includes('wheat') || name.includes('paddy') || name.includes('grain') || name.includes('basmati') || name.includes('dal') || name.includes('atta') || name.includes('maida') || name.includes('millet') || name.includes('corn') || name.includes('jowar') || name.includes('bajra')
+  ) {
+    return 'Grains';
+  }
+
+  if (
+    cat.includes('fruit') ||
+    name.includes('apple') || name.includes('mango') || name.includes('banana') || name.includes('orange') || name.includes('grape') || name.includes('fruit') || name.includes('guava') || name.includes('papaya')
+  ) {
+    return 'Fruits';
+  }
+
+  if (
+    cat.includes('spice') ||
+    name.includes('turmeric') || name.includes('chilli') || name.includes('pepper') || name.includes('spice') || name.includes('cardamom') || name.includes('clove') || name.includes('ginger') || name.includes('garlic')
+  ) {
+    return 'Spices';
+  }
+
+  if (
+    cat.includes('dairy') || cat.includes('milk') ||
+    name.includes('milk') || name.includes('ghee') || name.includes('butter') || name.includes('paneer')
+  ) {
+    return 'Dairy';
+  }
+
+  return 'Vegetables';
+}
+
+function FarmerRevenueView() {
   const [monthlyRevenue, setMonthlyRevenue] = useState<any[]>([]);
   const [categoryData, setCategoryData] = useState<any[]>([
     { name:'Vegetables', pct:0, color:'#16a34a' },
@@ -1456,9 +1495,10 @@ function RevenueView() {
            revenueMap[month] = (revenueMap[month] || 0) + (o.totalAmount || 0);
            allTimeVal += (o.totalAmount || 0);
 
-           if (o.totalAmount % 3 === 0) veg += o.totalAmount;
-           else if (o.totalAmount % 3 === 1) grain += o.totalAmount;
-           else spice += o.totalAmount;
+           const catName = getCategoryFromOrder(o);
+           if (catName === 'Grains') grain += (o.totalAmount || 0);
+           else if (catName === 'Spices') spice += (o.totalAmount || 0);
+           else veg += (o.totalAmount || 0);
         });
 
         const defaultMonths = ['Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul'];
@@ -1770,10 +1810,11 @@ function BuyerDashboardView({ onCheckout, onProductClick, onBrowse }: { onChecko
              farmersMap[o.farmerId].orders++;
            }
            totalVal += (o.totalAmount || 0);
-           // Simple mock categorization based on amount to populate rings since we don't have category per order easily yet
-           if (o.totalAmount % 3 === 0) vegTotal += o.totalAmount;
-           else if (o.totalAmount % 3 === 1) grainTotal += o.totalAmount;
-           else fruitTotal += o.totalAmount;
+           const catName = getCategoryFromOrder(o);
+           if (catName === 'Grains') grainTotal += (o.totalAmount || 0);
+           else if (catName === 'Fruits') fruitTotal += (o.totalAmount || 0);
+           else if (catName === 'Spices') spiceTotal += (o.totalAmount || 0);
+           else vegTotal += (o.totalAmount || 0);
         });
 
         setStats({ total: t, delivered: d, inTransit: i, processing: p });
@@ -2498,9 +2539,11 @@ function SpendingView() {
            spendingMap[month] = (spendingMap[month] || 0) + (o.totalAmount || 0);
            allTimeVal += (o.totalAmount || 0);
 
-           if (o.totalAmount % 3 === 0) veg += o.totalAmount;
-           else if (o.totalAmount % 3 === 1) grain += o.totalAmount;
-           else fruit += o.totalAmount;
+           const catName = getCategoryFromOrder(o);
+           if (catName === 'Grains') grain += (o.totalAmount || 0);
+           else if (catName === 'Fruits') fruit += (o.totalAmount || 0);
+           else if (catName === 'Spices') spice += (o.totalAmount || 0);
+           else veg += (o.totalAmount || 0);
 
            if (o.farmerId) {
              if (!farmersMap[o.farmerId]) {
@@ -3108,9 +3151,14 @@ function CheckoutView({ item, onConfirm, onCancel }: { item: any, onConfirm: (de
 
           <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginTop: 8 }}>
             <label className="dsh-form-label">Apply Coupon</label>
-            <div style={{ display: 'flex', gap: 12 }}>
-              <input type="text" className="dsh-form-input" placeholder="Enter coupon code" style={{ flex: 1 }} value={couponCode} onChange={e => setCouponCode(e.target.value)} />
-              <button className="dsh-ghost-btn dsh-ghost-btn--border" style={{ padding: '0 20px', fontWeight: 600, color: '#166534', borderColor: '#166534' }} onClick={applyCoupon} disabled={validatingCoupon}>
+            <div style={{ display: 'flex', gap: 12, alignItems: 'center', width: '100%' }}>
+              <input type="text" className="dsh-form-input" placeholder="Enter coupon code" style={{ flex: 1, minWidth: 0 }} value={couponCode} onChange={e => setCouponCode(e.target.value)} />
+              <button 
+                className="dsh-ghost-btn dsh-ghost-btn--border" 
+                style={{ width: 'auto', flexShrink: 0, padding: '0 16px', height: '40px', fontWeight: 600, color: '#166534', borderColor: '#166534', whiteSpace: 'nowrap' }} 
+                onClick={applyCoupon} 
+                disabled={validatingCoupon}
+              >
                 {validatingCoupon ? '...' : 'Apply'}
               </button>
             </div>
