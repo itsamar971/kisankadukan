@@ -121,7 +121,7 @@ function MessagesView() {
         </div>
         <div style={{ padding: '16px', borderTop: '1px solid #ece9e3', display: 'flex', gap: '12px', alignItems: 'center', width: '100%', boxSizing: 'border-box' }}>
           <input 
-            className="dsh-form-input" 
+            className="dsh-form-input dsh-inline-input" 
             placeholder="Type your message..." 
             style={{ flex: 1, minWidth: 0, width: '100%' }} 
             value={input}
@@ -129,8 +129,8 @@ function MessagesView() {
             onKeyDown={e => e.key === 'Enter' && handleSend()}
           />
           <button 
-            className="dsh-cta-btn" 
-            style={{ width: '48px', height: '42px', flexShrink: 0, padding: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }} 
+            className="dsh-cta-btn dsh-input-btn" 
+            style={{ width: '48px', height: '42px', minWidth: '48px', flexShrink: 0, padding: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }} 
             onClick={handleSend}
           >
             <ArrowRight size={16}/>
@@ -3152,9 +3152,9 @@ function CheckoutView({ item, onConfirm, onCancel }: { item: any, onConfirm: (de
           <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginTop: 8 }}>
             <label className="dsh-form-label">Apply Coupon</label>
             <div style={{ display: 'flex', gap: 12, alignItems: 'center', width: '100%' }}>
-              <input type="text" className="dsh-form-input" placeholder="Enter coupon code" style={{ flex: 1, minWidth: 0 }} value={couponCode} onChange={e => setCouponCode(e.target.value)} />
+              <input type="text" className="dsh-form-input dsh-inline-input" placeholder="Enter coupon code" style={{ flex: 1, minWidth: 0 }} value={couponCode} onChange={e => setCouponCode(e.target.value)} />
               <button 
-                className="dsh-ghost-btn dsh-ghost-btn--border" 
+                className="dsh-ghost-btn dsh-ghost-btn--border dsh-input-btn" 
                 style={{ width: 'auto', flexShrink: 0, padding: '0 16px', height: '40px', fontWeight: 600, color: '#166534', borderColor: '#166534', whiteSpace: 'nowrap' }} 
                 onClick={applyCoupon} 
                 disabled={validatingCoupon}

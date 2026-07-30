@@ -4836,16 +4836,19 @@ html {
     gap: 8px !important;
   }
   .dsh-page-title { font-size: 20px !important; }
-  .dsh-ghost-btn.dsh-ghost-btn--border { width: 100% !important; justify-content: center !important; }
 
-  /* ── 8. CTA buttons ── */
-  .dsh-cta-btn { width: 100% !important; justify-content: center !important; }
-  
-  /* Flex input containers button width reset */
-  div:has(> .dsh-form-input) > button,
-  div:has(> input) > button {
+  /* ── 8. Inline Input & Button Fix ── */
+  .dsh-input-btn {
     width: auto !important;
+    min-width: 48px !important;
+    max-width: 100px !important;
     flex-shrink: 0 !important;
+    flex-grow: 0 !important;
+  }
+  .dsh-inline-input {
+    flex: 1 1 auto !important;
+    min-width: 0 !important;
+    width: 100% !important;
   }
 
   /* ── 9. Reminder card — stack vertically on mobile ── */
