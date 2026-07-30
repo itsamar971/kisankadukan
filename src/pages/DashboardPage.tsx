@@ -1502,7 +1502,7 @@ function OrdersView({ orders, role, isEmbedded }: { orders: Order[]; role: 'farm
 
 function getCategoryFromOrder(o: any): 'Vegetables' | 'Grains' | 'Fruits' | 'Spices' | 'Dairy' {
   const cat = (o.category || '').toLowerCase();
-  const name = (o.productName || o.name || o.title || o.crop || o.items?.[0]?.name || o.items?.[0]?.title || '').toLowerCase();
+  const name = (o.productName || o.name || o.title || o.crop || o.item || o.items?.[0]?.name || o.items?.[0]?.title || '').toLowerCase();
 
   if (
     cat.includes('grain') || cat.includes('rice') || cat.includes('wheat') || cat.includes('paddy') || cat.includes('dal') || cat.includes('pulse') || cat.includes('millet') || cat.includes('cereal') ||
@@ -1532,7 +1532,13 @@ function getCategoryFromOrder(o: any): 'Vegetables' | 'Grains' | 'Fruits' | 'Spi
     return 'Dairy';
   }
 
-  return 'Vegetables';
+  if (
+    cat.includes('veg') || name.includes('tomato') || name.includes('potato') || name.includes('onion') || name.includes('carrot') || name.includes('cabbage') || name.includes('spinach')
+  ) {
+    return 'Vegetables';
+  }
+
+  return 'Grains';
 }
 
 function FarmerRevenueView() {
