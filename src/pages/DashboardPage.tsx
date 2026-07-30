@@ -3333,9 +3333,12 @@ export default function DashboardPage() {
             <span className="dsh-nav-label">Profile</span>
             {activeNav==='profile' && <span className="dsh-nav-indicator"/>}
           </button>
-          <button className="dsh-nav-item" onClick={() => handleNav('profile')}>
+          <button 
+            className={`dsh-nav-item ${activeNav==='settings'?'dsh-nav-item--active':''}`} 
+            onClick={() => handleNav('settings')}>
             <span className="dsh-nav-icon"><Settings size={16}/></span>
             <span className="dsh-nav-label">Settings</span>
+            {activeNav==='settings' && <span className="dsh-nav-indicator"/>}
           </button>
           <button className="dsh-logout-btn" onClick={handleLogout}>
             <LogOut size={16}/> Sign out
