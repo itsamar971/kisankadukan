@@ -8,7 +8,7 @@ import {
   Wheat, Truck, CheckCircle2, Clock, Sprout,
   IndianRupee, Search, Download, 
   User, AlertCircle, FileText, Package2,
-  MessageSquare, Sparkles, ArrowRight, Apple, Zap, Shield, Home, Upload, Megaphone, Trash2
+  MessageSquare, Sparkles, ArrowRight, Apple, Zap, Shield, Home, Upload, Megaphone, Trash2, X
 } from 'lucide-react';
 // import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { updatePassword } from 'firebase/auth';
@@ -3198,6 +3198,36 @@ export default function DashboardPage() {
   const [selectedProduct, setSelectedProduct] = useState<any>(null);
   const [buyerOrders, setBuyerOrders] = useState<any[]>([]);
   const [farmerOrders, setFarmerOrders] = useState<any[]>([]);
+  const [activeToast, setActiveToast] = useState<any>(null);
+
+  useEffect(() => {
+    const checkBroadcasts = async () => {
+      try {
+        const res = await api.get('/users/announcements');
+        const list = res.data || [];
+        if (list.length > 0) {
+          const latest = list[0];
+          const toastKey = 'kkd_toast_shown_' + latest.id;
+          const deletedSet = new Set(JSON.parse(localStorage.getItem('kkd_deleted_notif_ids') || '[]'));
+          
+          if (!sessionStorage.getItem(toastKey) && !deletedSet.has(latest.id)) {
+            sessionStorage.setItem(toastKey, 'true');
+            setActiveToast(latest);
+            
+            setTimeout(() => {
+              setActiveToast((current: any) => current?.id === latest.id ? null : current);
+            }, 7000);
+          }
+        }
+      } catch (err) {
+        console.error('Error polling broadcasts:', err);
+      }
+    };
+
+    checkBroadcasts();
+    const timer = setInterval(checkBroadcasts, 4000);
+    return () => clearInterval(timer);
+  }, []);
 
   useEffect(() => {
     if (!user) return;
@@ -3523,7 +3553,86 @@ export default function DashboardPage() {
             <span className="dsh-bottom-nav-label">{item.label}</span>
           </button>
         ))}
-      </nav>
+      {/* Beautiful Top-Right Floating Live Broadcast Toast */}
+      {activeToast && (
+        <div style={{
+          position: 'fixed',
+          top: 24,
+          right: 24,
+          zIndex: 99999,
+          maxWidth: 380,
+          width: 'calc(100vw - 48px)',
+          background: 'rgba(255, 255, 255, 0.95)',
+          backdropFilter: 'blur(16px)',
+          border: '1px solid #16a34a',
+          boxShadow: '0 20px 40px rgba(0, 0, 0, 0.15), 0 0 20px rgba(22, 163, 74, 0.15)',
+          borderRadius: 20,
+          padding: '16px 20px',
+          animation: 'slideInRight 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards',
+          display: 'flex',
+          gap: 14,
+          alignItems: 'flex-start'
+        }}>
+          <style>{`
+            @keyframes slideInRight {
+              from { transform: translateX(120%); opacity: 0; }
+              to { transform: translateX(0); opacity: 1; }
+            }
+          `}</style>
+          
+          <div style={{
+            width: 42,
+            height: 42,
+            borderRadius: '50%',
+            background: 'linear-gradient(135deg, #16a34a 0%, #15803d 100%)',
+            color: '#fff',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            flexShrink: 0,
+            boxShadow: '0 4px 12px rgba(22, 163, 74, 0.3)'
+          }}>
+            <Megaphone size={20} />
+          </div>
+
+          <div style={{ flex: 1, minWidth: 0 }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 4 }}>
+              <span style={{ fontSize: 11, fontWeight: 700, color: '#16a34a', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                📢 Admin Broadcast
+              </span>
+              <span style={{ fontSize: 10, color: '#94a3b8' }}>
+                {activeToast.createdAt ? new Date(activeToast.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : 'Just now'}
+              </span>
+            </div>
+            <h4 style={{ margin: '0 0 4px', fontSize: 14, fontWeight: 800, color: '#0f172a', lineHeight: 1.3 }}>
+              {activeToast.title}
+            </h4>
+            <p style={{ margin: 0, fontSize: 13, color: '#475569', lineHeight: 1.4, wordBreak: 'break-word' }}>
+              {activeToast.message}
+            </p>
+          </div>
+
+          <button
+            onClick={() => setActiveToast(null)}
+            style={{
+              background: 'none',
+              border: 'none',
+              cursor: 'pointer',
+              color: '#94a3b8',
+              padding: 4,
+              borderRadius: '50%',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              marginTop: -4,
+              marginRight: -4
+            }}
+            title="Dismiss notification"
+          >
+            <X size={16} />
+          </button>
+        </div>
+      )}
       {showRadarModal && <RadarScannerModal onClose={() => setShowRadarModal(false)} />}
     </div>
   );
