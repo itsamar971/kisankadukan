@@ -39,14 +39,13 @@ interface BrowseProduce {
 }
 
 function getFarmerDisplayName(farmerObj?: any, fallbackName?: string): string {
-  if (typeof farmerObj === 'string' && farmerObj.trim() && farmerObj !== 'Farmer') return farmerObj;
-  if (fallbackName && fallbackName.trim() && fallbackName !== 'Farmer') return fallbackName;
+  if (typeof farmerObj === 'string' && farmerObj.trim() && farmerObj !== 'Farmer' && !farmerObj.startsWith('Farmer ')) return farmerObj;
+  if (fallbackName && fallbackName.trim() && fallbackName !== 'Farmer' && !fallbackName.startsWith('Farmer ')) return fallbackName;
   if (farmerObj && typeof farmerObj === 'object') {
     const name = farmerObj.farmerName || farmerObj.farmer || farmerObj.sellerName || farmerObj.farmer_name;
-    if (name && name !== 'Farmer') return name;
-    if (farmerObj.farmerId) return `Farmer ${farmerObj.farmerId.substring(0, 5)}`;
+    if (name && name !== 'Farmer' && !name.startsWith('Farmer ')) return name;
   }
-  return fallbackName && fallbackName !== 'Farmer' ? fallbackName : 'Ramesh Kumar';
+  return (fallbackName && fallbackName !== 'Farmer' && !fallbackName.startsWith('Farmer ')) ? fallbackName : 'rahul';
 }
 
 function FarmerVerifiedCapsule({ farmer, farmerName, isVerified = true, size = 'sm' }: { farmer?: any; farmerName?: string; isVerified?: boolean; size?: 'sm' | 'md' }) {
@@ -1863,8 +1862,8 @@ function BuyerDashboardView({ onCheckout, onProductClick, onBrowse }: { onChecko
            if (o.farmerId && !farmersMap[o.farmerId]) {
              farmersMap[o.farmerId] = {
                 id: o.farmerId,
-                name: o.farmer || `Farmer ${o.farmerId.substring(0,4)}`,
-                loc: 'Various',
+                name: getFarmerDisplayName(o, o.farmerName || o.farmer),
+                loc: 'Punjab',
                 crops: ['Produce'],
                 orders: 1,
                 verified: true
@@ -1918,7 +1917,7 @@ function BuyerDashboardView({ onCheckout, onProductClick, onBrowse }: { onChecko
   };
 
   const freshPicks = browseProduce.slice(0, 5).map(p => ({
-     name: p.name, farmer: p.farmer, price: `₹${p.pricePerKg || p.price}/kg`, status: 'New', img: '🥬'
+     name: p.name, farmer: getFarmerDisplayName(p, p.farmerName || p.farmer), price: `₹${p.pricePerKg || p.price}/kg`, status: 'New', img: '🥬'
   }));
   if (freshPicks.length === 0) {
      freshPicks.push({ name: 'No products yet', farmer: '-', price: '-', status: 'N/A', img: '🛒' });
@@ -2002,7 +2001,7 @@ function BuyerDashboardView({ onCheckout, onProductClick, onBrowse }: { onChecko
               </div>
               <div>
                 <h3 style={{ margin: '8px 0 4px', fontSize: 16, color: '#111827' }}>{product.name}</h3>
-                <p style={{ margin: 0, fontSize: 13, color: '#8a9a84' }}>{product.farmer}</p>
+                <p style={{ margin: 0, fontSize: 13, color: '#8a9a84' }}>{getFarmerDisplayName(product, product.farmerName || product.farmer)}</p>
               </div>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 4, marginTop: 'auto', paddingTop: 8 }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
@@ -2181,7 +2180,7 @@ function ProductDetailsView({ product, onBack, onAddToCart, onRemoveFromCart, ca
             <h1 style={{ fontSize: 28, margin: 0, color: '#111827', fontWeight: 700 }}>{product.name}</h1>
             <span style={{ background: '#f0fdf4', color: '#166534', padding: '4px 8px', borderRadius: 8, fontSize: 12, fontWeight: 600 }}>{product.badge || 'Fresh'}</span>
           </div>
-          <p style={{ margin: '0 0 16px 0', color: '#8a9a84', fontSize: 16, display: 'flex', alignItems: 'center', gap: 6 }}><Sprout size={16}/> {product.farmer} &middot; <MapPin size={14}/> {product.loc}</p>
+          <p style={{ margin: '0 0 16px 0', color: '#8a9a84', fontSize: 16, display: 'flex', alignItems: 'center', gap: 6 }}><Sprout size={16}/> {getFarmerDisplayName(product, product.farmerName || product.farmer)} &middot; <MapPin size={14}/> {product.loc || 'Punjab'}</p>
           
           <div style={{ display: 'flex', gap: 16, marginBottom: 24, paddingBottom: 24, borderBottom: '1px solid #ece9e3', flexWrap: 'wrap' }}>
             <div style={{ flex: '1 1 auto', minWidth: 100 }}>
@@ -2278,7 +2277,7 @@ function ProductDetailsView({ product, onBack, onAddToCart, onRemoveFromCart, ca
               </div>
               <div>
                 <h3 style={{ margin: '8px 0 4px', fontSize: 14, color: '#111827', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{p.name}</h3>
-                <p style={{ margin: 0, fontSize: 12, color: '#8a9a84' }}>{p.farmer}</p>
+                <p style={{ margin: 0, fontSize: 12, color: '#8a9a84' }}>{getFarmerDisplayName(p, p.farmerName || p.farmer)}</p>
               </div>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 4, marginTop: 'auto', paddingTop: 8 }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
@@ -2462,7 +2461,7 @@ function BrowseView({ onCheckout, onProductClick, onAddToCart, onRemoveFromCart,
             </div>
             <div className="dsh-produce-card-body">
               <h3 className="dsh-produce-name">{p.name}</h3>
-              <p className="dsh-produce-farmer"><Sprout size={11}/>{p.farmer} · {p.loc}</p>
+              <p className="dsh-produce-farmer"><Sprout size={11}/>{getFarmerDisplayName(p, p.farmerName || p.farmer)} · {p.loc || 'Punjab'}</p>
               <div style={{ display:'flex', alignItems:'center', gap:6, marginBottom:10, fontSize:12, color:'#8a9a84' }}>
                 <Phone size={11}/>{p.phone}
               </div>
@@ -2505,14 +2504,14 @@ function FarmersView() {
            if (o.farmerId && !farmersMap[o.farmerId]) {
              farmersMap[o.farmerId] = {
                 id: o.farmerId,
-                name: o.farmer || `Farmer ${o.farmerId.substring(0,4)}`,
-                loc: 'Various',
+                name: getFarmerDisplayName(o, o.farmerName || o.farmer),
+                loc: 'Punjab',
                 crops: ['Produce'],
                 orders: 1,
                 totalSpent: `₹${o.totalAmount || 0}`,
                 rating: 4.8,
                 joined: '2026',
-                phone: '-',
+                phone: '+91 98765 43210',
                 verified: true
              };
            } else if (o.farmerId) {
