@@ -8,7 +8,7 @@ import {
   Wheat, Truck, CheckCircle2, Clock, Sprout,
   IndianRupee, Search, Download, 
   User, AlertCircle, FileText, Package2,
-  MessageSquare, Sparkles, ArrowRight, Apple, Zap, Shield, Home, Upload
+  MessageSquare, Sparkles, ArrowRight, Apple, Zap, Shield, Home, Upload, Megaphone, Trash2
 } from 'lucide-react';
 // import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { updatePassword } from 'firebase/auth';
@@ -138,11 +138,54 @@ function MessagesView() {
 }
 
 function NotificationsView() {
-  const [notifs, setNotifs] = useState([
-    { id: 1, title: 'Order Delivered', body: 'Your order #ORD-2841 has been delivered.', time: '10 mins ago', type: 'success', icon: <Package size={16}/>, read: false },
-    { id: 2, title: 'System Update', body: 'We have updated our terms of service.', time: '1 hour ago', type: 'info', icon: <Bell size={16}/>, read: false },
-    { id: 3, title: 'New Message', body: 'Admin has replied to your query.', time: '2 hours ago', type: 'message', icon: <MessageSquare size={16}/>, read: true },
-  ]);
+  const [notifs, setNotifs] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  const fetchNotifs = useCallback(async () => {
+    try {
+      const readSet = new Set(JSON.parse(localStorage.getItem('kkd_read_notif_ids') || '[]'));
+      const deletedSet = new Set(JSON.parse(localStorage.getItem('kkd_deleted_notif_ids') || '[]'));
+
+      const res = await api.get('/users/announcements');
+      const announcements = res.data || [];
+
+      const list = announcements
+        .filter((a: any) => !deletedSet.has(a.id))
+        .map((a: any) => ({
+          id: a.id,
+          title: a.title,
+          body: a.message,
+          time: a.createdAt ? new Date(a.createdAt).toLocaleString() : 'Just now',
+          type: 'info',
+          icon: <Megaphone size={16}/>,
+          read: readSet.has(a.id)
+        }));
+
+      setNotifs(list);
+    } catch (err) {
+      console.error('Failed to fetch announcements:', err);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchNotifs();
+  }, [fetchNotifs]);
+
+  const handleMarkAllRead = () => {
+    const readSet = new Set(JSON.parse(localStorage.getItem('kkd_read_notif_ids') || '[]'));
+    notifs.forEach(n => readSet.add(n.id));
+    localStorage.setItem('kkd_read_notif_ids', JSON.stringify(Array.from(readSet)));
+    setNotifs(prev => prev.map(n => ({ ...n, read: true })));
+  };
+
+  const handleDeleteNotif = (id: string | number) => {
+    const deletedSet = new Set(JSON.parse(localStorage.getItem('kkd_deleted_notif_ids') || '[]'));
+    deletedSet.add(id);
+    localStorage.setItem('kkd_deleted_notif_ids', JSON.stringify(Array.from(deletedSet)));
+    setNotifs(prev => prev.filter(n => n.id !== id));
+  };
 
   const unreadCount = notifs.filter(n => !n.read).length;
 
@@ -154,28 +197,37 @@ function NotificationsView() {
             Notifications 
             {unreadCount > 0 && <span style={{fontSize:12,background:'#ef4444',color:'#fff',padding:'2px 8px',borderRadius:20,marginLeft:8,verticalAlign:'middle'}}>{unreadCount} New</span>}
           </h1>
-          <p className="dsh-page-sub">Stay updated with your account activity.</p>
+          <p className="dsh-page-sub">Stay updated with your account activity and admin announcements.</p>
         </div>
         {unreadCount > 0 && (
-          <button className="dsh-ghost-btn dsh-ghost-btn--border" onClick={() => setNotifs(notifs.map(n => ({...n, read: true})))}>
+          <button className="dsh-ghost-btn dsh-ghost-btn--border" onClick={handleMarkAllRead}>
             Mark all as read
           </button>
         )}
       </div>
       <div className="dsh-card">
-        {notifs.length === 0 ? (
-           <div style={{padding: 40, textAlign: 'center', color: '#8a9a84'}}>No notifications</div>
+        {loading ? (
+          <div style={{padding: 40, textAlign: 'center', color: '#8a9a84'}}>Loading notifications...</div>
+        ) : notifs.length === 0 ? (
+          <div style={{padding: 40, textAlign: 'center', color: '#8a9a84'}}>No notifications</div>
         ) : notifs.map((n, i) => (
-          <div key={n.id} style={{ display: 'flex', gap: '16px', padding: '20px', background: n.read ? '#fff' : '#f8faf7', borderBottom: i === notifs.length - 1 ? 'none' : '1px solid #ece9e3' }}>
-            <div style={{ width: 40, height: 40, borderRadius: '50%', background: n.type === 'success' ? '#dcfce7' : n.type === 'info' ? '#e0f2fe' : '#f5f3ff', color: n.type === 'success' ? '#16a34a' : n.type === 'info' ? '#0284c7' : '#7c3aed', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-              {n.icon}
+          <div key={n.id} style={{ display: 'flex', gap: '16px', padding: '20px', background: n.read ? '#fff' : '#f8faf7', borderBottom: i === notifs.length - 1 ? 'none' : '1px solid #ece9e3', alignItems: 'center' }}>
+            <div style={{ width: 40, height: 40, borderRadius: '50%', background: '#e0f2fe', color: '#0284c7', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+              <Megaphone size={16}/>
             </div>
             <div style={{ flex: 1 }}>
               <h4 style={{ margin: '0 0 4px', fontSize: 14, color: '#111827', fontWeight: n.read ? 600 : 800 }}>{n.title}</h4>
               <p style={{ margin: '0 0 8px', fontSize: 13, color: '#4b5563' }}>{n.body}</p>
               <span style={{ fontSize: 11, color: '#9ca3af' }}>{n.time}</span>
             </div>
-            {!n.read && <div style={{width:8,height:8,borderRadius:'50%',background:'#22c55e',marginTop:6, flexShrink: 0}} />}
+            {!n.read && <div style={{width:8,height:8,borderRadius:'50%',background:'#22c55e',flexShrink: 0}} />}
+            <button 
+              onClick={() => handleDeleteNotif(n.id)}
+              style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#9ca3af', padding: '6px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+              title="Delete notification"
+            >
+              <Trash2 size={16} />
+            </button>
           </div>
         ))}
       </div>
