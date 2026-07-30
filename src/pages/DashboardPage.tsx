@@ -1,4 +1,4 @@
-import { useState, useRef, Fragment, useEffect } from 'react';
+import { useState, useRef, Fragment, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import {
@@ -36,39 +36,58 @@ interface BrowseProduce {
   rating: number; qty: string; img: string; badge: string; category: string; phone: string;
 }
 
-function MessagesView() {
-  const [messages, setMessages] = useState([
-    { id: 1, text: 'Hello! How can we help you today?', time: '10:00 AM', sender: 'admin' }
-  ]);
+function FarmerMessagesView() {
+  const [messages, setMessages] = useState<any[]>([]);
   const [input, setInput] = useState('');
+  const [sending, setSending] = useState(false);
   const endRef = useRef<HTMLDivElement>(null);
 
-  const handleSend = () => {
-    if (!input.trim()) return;
-    const newMsg = {
-      id: Date.now(),
-      text: input,
-      time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-      sender: 'user'
-    };
-    setMessages(prev => [...prev, newMsg]);
-    setInput('');
-    setTimeout(() => {
-      endRef.current?.scrollIntoView({ behavior: 'smooth' });
-    }, 100);
+  const fetchMessages = useCallback(async () => {
+    try {
+      const res = await api.get('/users/messages');
+      const backendMsgs = (res.data?.messages || []).map((m: any) => ({
+        id: m.id,
+        text: m.text,
+        time: m.timestamp ? new Date(m.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '',
+        sender: m.isAdmin ? 'admin' : 'user'
+      }));
 
-    // Simulate admin reply
-    setTimeout(() => {
-      setMessages(prev => [...prev, {
-        id: Date.now(),
-        text: "Thanks for reaching out! We've received your message and will get back to you shortly.",
-        time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-        sender: 'admin'
-      }]);
-      setTimeout(() => {
-        endRef.current?.scrollIntoView({ behavior: 'smooth' });
-      }, 100);
-    }, 1500);
+      if (backendMsgs.length === 0) {
+        setMessages([
+          { id: 'welcome', text: 'Hello! How can we help you today?', time: '10:00 AM', sender: 'admin' }
+        ]);
+      } else {
+        setMessages(backendMsgs);
+      }
+    } catch (err) {
+      console.error('Error fetching messages:', err);
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchMessages();
+    const interval = setInterval(fetchMessages, 4000);
+    return () => clearInterval(interval);
+  }, [fetchMessages]);
+
+  useEffect(() => {
+    endRef.current?.scrollIntoView({ behavior: 'smooth' });
+  }, [messages]);
+
+  const handleSend = async () => {
+    if (!input.trim() || sending) return;
+    const textToSend = input.trim();
+    setInput('');
+    setSending(true);
+
+    try {
+      await api.post('/users/messages', { text: textToSend });
+      await fetchMessages();
+    } catch (err) {
+      console.error('Error sending message:', err);
+    } finally {
+      setSending(false);
+    }
   };
 
   return (
